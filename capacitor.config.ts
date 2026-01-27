@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-    appId: 'com.trifaw.sgi',
+    appId: 'trifaw.com.br',
     appName: 'TRIFAW SGI',
     webDir: 'dist',
     server: {

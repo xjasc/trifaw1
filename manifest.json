@@ -1,21 +1,41 @@
 {
-  "short_name": "TRIFAW ENG.",
+  "id": "trifaw.com.br",
+  "short_name": "SGI TRIFAW",
   "name": "TRIFAW ENGENHARIA - SGI",
+  "description": "Sistema Integrado de Gestão - Trifaw Engenharia",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3898/3898078.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "512x512"
     },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3898/3898078.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "screenshots": [
+    {
+      "src": "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&q=80&w=1280",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Dashboard SGI"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=720",
+      "sizes": "720x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Login Mobile"
+    }
+  ],
+  "start_url": "/",
   "display": "standalone",
   "theme_color": "#022c22",
   "background_color": "#022c22",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "scope": "/"
 }
