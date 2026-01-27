@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "start": "serve -s dist -l $PORT",
     "mobile:init": "npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios && npx cap init",
     "mobile:android": "npm run build && npx cap sync android && npx cap open android",
     "mobile:ios": "npm run build && npx cap sync ios && npx cap open ios"
@@ -19,6 +20,7 @@
     "lucide-react": "^0.344.0",
     "clsx": "^2.1.0",
     "tailwind-merge": "^2.2.1",
+    "serve": "^14.2.1",
     "@capacitor/core": "^6.0.0",
     "@capacitor/android": "^6.0.0",
     "@capacitor/ios": "^6.0.0"
