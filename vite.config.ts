@@ -20,8 +20,9 @@ export default defineConfig({
         theme_color: '#022c22',
         background_color: '#022c22',
         display: 'standalone',
-        display_override: ['window-controls-overlay', 'tabbed', 'standalone', 'minimal-ui'],
+        display_override: ['tabbed', 'window-controls-overlay', 'standalone', 'minimal-ui'],
         categories: ['business', 'productivity', 'utilities'],
+        iarc_rating_id: '',
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
@@ -30,13 +31,13 @@ export default defineConfig({
             name: 'Dashboard',
             short_name: 'Início',
             url: '/',
-            icons: [{ src: 'https://cdn-icons-png.flaticon.com/512/3898/3898078.png', sizes: '192x192' }]
+            icons: [{ src: 'https://cdn-icons-png.flaticon.com/512/3898/3898078.png', sizes: '512x512' }]
           },
           {
             name: 'Meus Projetos',
             short_name: 'Projetos',
             url: '/?view=projects',
-            icons: [{ src: 'https://cdn-icons-png.flaticon.com/512/3891/3891392.png', sizes: '192x192' }]
+            icons: [{ src: 'https://cdn-icons-png.flaticon.com/512/3891/3891392.png', sizes: '512x512' }]
           }
         ],
         widgets: [
@@ -104,7 +105,7 @@ export default defineConfig({
         screenshots: [
           {
             src: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&q=80&w=1280',
-            sizes: '1280x720',
+            sizes: '1280x853',
             type: 'image/jpeg',
             form_factor: 'wide',
             label: 'Dashboard SGI'
@@ -115,6 +116,13 @@ export default defineConfig({
             type: 'image/jpeg',
             form_factor: 'narrow',
             label: 'Login Mobile'
+          }
+        ],
+        prefer_related_applications: true,
+        related_applications: [
+          {
+            platform: 'webapp',
+            url: 'https://trifaw-engenharia---sgi.web.app/manifest.json'
           }
         ]
       } as any)

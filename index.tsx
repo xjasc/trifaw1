@@ -1,9 +1,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+// @ts-ignore
+import { registerSW } from 'virtual:pwa-register';
 
-// O vite-plugin-pwa injeta o registro do service worker automaticamente
-// quando configurado com 'autoUpdate' no vite.config.ts
+// Registro explícito do Service Worker para melhor detecção por ferramentas como PWABuilder
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (confirm('Novo conteúdo disponível. Deseja atualizar?')) {
+      updateSW(true);
+    }
+  },
+  onOfflineReady() {
+    console.log('App pronto para funcionar offline');
+  },
+});
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
