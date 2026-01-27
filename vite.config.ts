@@ -15,12 +15,79 @@ export default defineConfig({
         name: 'TRIFAW ENGENHARIA - SGI',
         short_name: 'SGI TRIFAW',
         description: 'Sistema Integrado de Gestão - Trifaw Engenharia',
+        lang: 'pt-BR',
+        dir: 'ltr',
         theme_color: '#022c22',
         background_color: '#022c22',
         display: 'standalone',
+        display_override: ['window-controls-overlay', 'tabbed', 'standalone', 'minimal-ui'],
+        categories: ['business', 'productivity', 'utilities'],
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
+        shortcuts: [
+          {
+            name: 'Dashboard',
+            short_name: 'Início',
+            url: '/',
+            icons: [{ src: 'https://cdn-icons-png.flaticon.com/512/3898/3898078.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Meus Projetos',
+            short_name: 'Projetos',
+            url: '/?view=projects',
+            icons: [{ src: 'https://cdn-icons-png.flaticon.com/512/3891/3891392.png', sizes: '192x192' }]
+          }
+        ],
+        widgets: [
+          {
+            name: 'Resumo TRIFAW',
+            short_name: 'SGI',
+            description: 'Resumo rápido de projetos ativos',
+            tag: 'trifaw-summary',
+            ms_ac_template: 'summary-template.json',
+            data: 'summary-data.json',
+            type: 'application/json',
+            screenshots: [{ src: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=400', sizes: '400x400', type: 'image/jpeg' }]
+          }
+        ],
+        edge_side_panel: {
+          preferred_width: 400
+        },
+        note_taking: {
+          new_note_url: '/?view=projects&action=new'
+        },
+        launch_handler: {
+          client_mode: ['navigate-existing', 'always']
+        },
+        share_target: {
+          action: '/share',
+          method: 'GET',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url'
+          }
+        },
+        protocol_handlers: [
+          {
+            protocol: 'web+trifaw',
+            url: '/?url=%s'
+          }
+        ],
+        file_handlers: [
+          {
+            action: '/',
+            accept: {
+              'application/pdf': ['.pdf'],
+              'image/*': ['.jpg', '.jpeg', '.png']
+            }
+          }
+        ],
+        scope_extensions: [
+          { origin: 'https://trifaw-engenharia---sgi.web.app' },
+          { origin: 'https://trifaw-engenharia---sgi.firebaseapp.com' }
+        ],
         icons: [
           {
             src: 'https://cdn-icons-png.flaticon.com/512/3898/3898078.png',
