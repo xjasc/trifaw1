@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { 
+    @apply font-inter bg-[#f5f5f4] text-[#1c1917];
+  }
+}
+
+@layer components {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(231, 229, 228, 0.8);
+  }
+
+  .no-scrollbar::-webkit-scrollbar { 
+    display: none; 
+  }
+
+  /* Fundo de Engenharia Estilizado */
+  .engineering-bg {
+    background-color: #f5f5f4; 
+    background-image: radial-gradient(#d6d3d1 1.5px, transparent 1.5px);
+    background-size: 28px 28px;
+    position: relative;
+    background-attachment: fixed; 
+  }
+
+  .engineering-bg::after {
+    content: "";
+    @apply fixed inset-0 pointer-events-none;
+    background: 
+      radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.03) 0%, transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(28, 25, 23, 0.03) 0%, transparent 40%);
+    z-index: 0;
+  }
+
+  .engineering-bg::before {
+    content: "";
+    @apply fixed bottom-[2%] left-1/2 -translate-x-1/2 -rotate-[5deg] pointer-events-none;
+    width: 65vw;
+    height: 45vh;
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    background-size: contain;
+    opacity: 0.035;
+    z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 300'%3E%3Cg fill='%23022c22'%3E%3Cpath d='M50,50 L250,50 L250,250 L50,250 Z' fill='none' stroke='%23022c22' stroke-width='10' /%3E%3Cpath d='M80,80 L220,80 L220,130 L175,130 L175,220 L125,220 L125,130 L80,130 Z' /%3E%3Ctext x='280' y='180' font-family='Arial Black, sans-serif' font-weight='900' font-style='italic' font-size='130' letter-spacing='-5'%3ETRIFAW%3C/text%3E%3Ctext x='285' y='230' font-family='Arial, sans-serif' font-weight='700' font-size='32' letter-spacing='22'%3EENGENHARIA%3C/text%3E%3C/g%3E%3C/svg%3E");
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-shake { 
+  animation: shake 0.5s ease-in-out; 
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f5f5f4; }
+::-webkit-scrollbar-thumb { background: #022c22; border-radius: 10px; }
