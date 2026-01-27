@@ -10,7 +10,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'script',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      manifest: {
+      manifest: ({
         id: "trifaw.com.br",
         name: 'TRIFAW ENGENHARIA - SGI',
         short_name: 'SGI TRIFAW',
@@ -20,7 +20,7 @@ export default defineConfig({
         theme_color: '#022c22',
         background_color: '#022c22',
         display: 'standalone',
-        display_override: ['window-controls-overlay', 'tabbed', 'standalone', 'minimal-ui'] as any,
+        display_override: ['window-controls-overlay', 'tabbed', 'standalone', 'minimal-ui'],
         categories: ['business', 'productivity', 'utilities'],
         orientation: 'portrait',
         scope: '/',
@@ -50,16 +50,16 @@ export default defineConfig({
             type: 'application/json',
             screenshots: [{ src: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=400', sizes: '400x400', type: 'image/jpeg' }]
           }
-        ] as any,
+        ],
         edge_side_panel: {
           preferred_width: 400
-        } as any,
+        },
         note_taking: {
           new_note_url: '/?view=projects&action=new'
-        } as any,
+        },
         launch_handler: {
           client_mode: ['navigate-existing', 'always']
-        } as any,
+        },
         share_target: {
           action: '/share',
           method: 'GET',
@@ -74,7 +74,7 @@ export default defineConfig({
             protocol: 'web+trifaw',
             url: '/?url=%s'
           }
-        ] as any,
+        ],
         file_handlers: [
           {
             action: '/',
@@ -83,7 +83,7 @@ export default defineConfig({
               'image/*': ['.jpg', '.jpeg', '.png']
             }
           }
-        ] as any,
+        ],
         scope_extensions: [
           { origin: 'https://trifaw-engenharia---sgi.web.app' },
           { origin: 'https://trifaw-engenharia---sgi.firebaseapp.com' }
@@ -117,7 +117,7 @@ export default defineConfig({
             label: 'Login Mobile'
           }
         ]
-      }
+      } as any)
     })
   ],
   build: {
