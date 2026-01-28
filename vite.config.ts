@@ -145,6 +145,19 @@ export default defineConfig({
                 statuses: [0, 200],
               },
             },
+          },
+          {
+            urlPattern: /.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              backgroundSync: {
+                name: 'trifaw-api-queue',
+                options: {
+                  maxRetentionTime: 24 * 60, // Retry for up to 24 hours
+                },
+              },
+            },
           }
         ]
       },
