@@ -51,13 +51,13 @@ export default defineConfig({
             type: 'application/json',
             screenshots: [{ src: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=400&h=400&fit=crop', sizes: '400x400', type: 'image/jpeg' }]
           }
-        ],
+        ] as any,
         edge_side_panel: {
           preferred_width: 400
-        },
+        } as any,
         note_taking: {
           new_note_url: '/?view=projects&action=new'
-        },
+        } as any,
         launch_handler: {
           client_mode: ['navigate-existing', 'always']
         } as any,
