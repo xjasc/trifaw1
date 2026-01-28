@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'script',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      manifest: ({
-        id: "trifaw.com.br",
+      manifest: {
+        id: 'trifaw.com.br',
         name: 'TRIFAW ENGENHARIA - SGI',
         short_name: 'SGI TRIFAW',
         description: 'Sistema Integrado de Gestão - Trifaw Engenharia',
@@ -128,40 +128,40 @@ export default defineConfig({
             url: 'https://trifaw-engenharia---sgi.web.app/manifest.json'
           }
         ]
-      } as any,
-        workbox: {
-      globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-      runtimeCaching: [
-        {
-          urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'unsplash-images',
-            expiration: {
-              maxEntries: 10,
-              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'unsplash-images',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
-            cacheableResponse: {
-              statuses: [0, 200],
-            },
-          },
-        },
-      ],
-    },
+          }
+        ]
+      },
       devOptions: {
-      enabled: true,
-    },
+        enabled: true
+      }
     })
   ],
-build: {
-  outDir: 'dist',
+  build: {
+    outDir: 'dist',
     sourcemap: false,
-      chunkSizeWarningLimit: 1600,
+    chunkSizeWarningLimit: 1600
   },
-server: {
-  headers: {
-    'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-    },
-},
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp'
+    }
+  }
 });
