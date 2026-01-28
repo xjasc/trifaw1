@@ -20,7 +20,7 @@ export default defineConfig({
         theme_color: '#022c22',
         background_color: '#022c22',
         display: 'standalone',
-        display_override: ['tabbed', 'window-controls-overlay', 'standalone', 'minimal-ui'],
+        display_override: ['tabbed', 'window-controls-overlay', 'standalone', 'minimal-ui'] as any,
         categories: ['business', 'productivity', 'utilities'],
         iarc_rating_id: '',
         orientation: 'portrait',
@@ -60,7 +60,7 @@ export default defineConfig({
         },
         launch_handler: {
           client_mode: ['navigate-existing', 'always']
-        },
+        } as any,
         share_target: {
           action: '/share',
           method: 'GET',
