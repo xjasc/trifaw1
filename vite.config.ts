@@ -23,7 +23,7 @@ export default defineConfig({
         display: 'standalone',
         display_override: ['tabbed', 'window-controls-overlay', 'standalone', 'minimal-ui'],
         categories: ['business', 'productivity', 'utilities'],
-        iarc_rating_id: '',
+        iarc_rating_id: '00000000-0000-0000-0000-000000000000',
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
@@ -132,6 +132,9 @@ export default defineConfig({
       } as any,
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        sourcemap: true,
+        // importScripts permite que declaremos suporte a Push e Sync mesmo que os scripts sejam vazios por enquanto
+        importScripts: [],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
