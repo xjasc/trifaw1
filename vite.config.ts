@@ -20,7 +20,7 @@ export default defineConfig({
         theme_color: '#022c22',
         background_color: '#022c22',
         display: 'standalone',
-        display_override: ['tabbed', 'window-controls-overlay', 'standalone', 'minimal-ui'] as any,
+        display_override: ['tabbed', 'window-controls-overlay', 'standalone', 'minimal-ui'],
         categories: ['business', 'productivity', 'utilities'],
         iarc_rating_id: '',
         orientation: 'portrait',
@@ -51,16 +51,16 @@ export default defineConfig({
             type: 'application/json',
             screenshots: [{ src: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=400&h=400&fit=crop', sizes: '400x400', type: 'image/jpeg' }]
           }
-        ] as any,
+        ],
         edge_side_panel: {
           preferred_width: 400
-        } as any,
+        },
         note_taking: {
           new_note_url: '/?view=projects&action=new'
-        } as any,
+        },
         launch_handler: {
           client_mode: ['navigate-existing', 'always']
-        } as any,
+        },
         share_target: {
           action: '/share',
           method: 'GET',
@@ -128,7 +128,7 @@ export default defineConfig({
             url: 'https://trifaw-engenharia---sgi.web.app/manifest.json'
           }
         ]
-      },
+      } as any,
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
