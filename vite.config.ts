@@ -49,7 +49,7 @@ export default defineConfig({
             ms_ac_template: 'summary-template.json',
             data: 'summary-data.json',
             type: 'application/json',
-            screenshots: [{ src: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=400', sizes: '400x400', type: 'image/jpeg' }]
+            screenshots: [{ src: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=400&h=400&fit=crop', sizes: '400x400', type: 'image/jpeg' }]
           }
         ],
         edge_side_panel: {
@@ -87,8 +87,11 @@ export default defineConfig({
         ],
         scope_extensions: [
           { origin: 'https://trifaw-engenharia---sgi.web.app' },
-          { origin: 'https://trifaw-engenharia---sgi.firebaseapp.com' }
+          { origin: 'https://trifaw-engenharia---sgi.firebaseapp.com' },
+          { origin: 'https://trifaw.com.br' }
         ],
+        handle_links: 'auto',
+        capture_links: 'none',
         icons: [
           {
             src: 'https://cdn-icons-png.flaticon.com/512/3898/3898078.png',
@@ -111,7 +114,7 @@ export default defineConfig({
             label: 'Dashboard SGI'
           },
           {
-            src: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=720',
+            src: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=720&h=1280',
             sizes: '720x1280',
             type: 'image/jpeg',
             form_factor: 'narrow',
@@ -125,18 +128,40 @@ export default defineConfig({
             url: 'https://trifaw-engenharia---sgi.web.app/manifest.json'
           }
         ]
-      } as any)
+      } as any,
+        workbox: {
+      globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'unsplash-images',
+            expiration: {
+              maxEntries: 10,
+              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+      ],
+    },
+      devOptions: {
+      enabled: true,
+    },
     })
   ],
-  build: {
-    outDir: 'dist',
+build: {
+  outDir: 'dist',
     sourcemap: false,
-    chunkSizeWarningLimit: 1600,
+      chunkSizeWarningLimit: 1600,
   },
-  server: {
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
+server: {
+  headers: {
+    'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
     },
-  },
+},
 });
