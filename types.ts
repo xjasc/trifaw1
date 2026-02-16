@@ -30,7 +30,7 @@ export interface Attachment {
   id: string;
   name: string;
   description?: string;
-  url: string; 
+  url: string;
   date: string;
   type: 'image' | 'document';
 }
@@ -62,17 +62,7 @@ export interface User {
   document?: string; // CPF ou CNPJ
 }
 
-export interface Expense {
-  id: string;
-  description: string;
-  amount: number;
-  category: string;
-  status: ExpenseStatus;
-  supplier: string;
-  date: string;
-  createdBy: string;
-  attachmentUrl?: string; // Link para Nota Fiscal ou Recibo
-}
+
 
 export interface Measurement {
   id: string;
@@ -109,32 +99,32 @@ export interface Project {
   id: string;
   projectCode?: string; // Código Internacional do Projeto
   name: string;
-  description?: string; 
+  description?: string;
   budget: number;
   startDate: string;
   durationMonths?: number; // Duração em meses
   status: ProjectStatus;
-  
+
   city?: string;
   state?: string;
-  
+
   // Compatibilidade + Multiplos Responsáveis
   responsibleId?: string;
   responsibleName?: string;
   responsibles?: ResponsibleData[];
 
   // Mantendo compatibilidade com código antigo, mas adicionando suporte a lista
-  clientId?: string; 
+  clientId?: string;
   clientName?: string;
   clientEmail?: string;
   clients?: ClientData[]; // Suporte a múltiplos clientes
-  
+
   expenses: Expense[];
   measurements: Measurement[];
   documents: Attachment[]; // Nova seção de documentação técnica
   photoTopics: PhotoTopic[]; // Nova seção de acompanhamento agrupado
   activities: ProjectActivity[];
-  physicalProgress: number; 
+  physicalProgress: number;
   createdBy: string;
   stages?: ProjectStage[]; // Nova estrutura de etapas
 }

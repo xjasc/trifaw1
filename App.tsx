@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { AppData, User, Project, UserRole } from './types';
+import { AppData, User, Project, UserRole, Supplier, Expense } from './types';
 import { api } from './services/apiService';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -16,7 +16,8 @@ const App: React.FC = () => {
     projects: [],
     users: [],
     suppliers: [],
-    currentUser: null
+    currentUser: null,
+    adminExpenses: []
   });
 
   const [currentView, setCurrentView] = useState<'dashboard' | 'projects' | 'project-details' | 'users' | 'suppliers' | 'admin-expenses'>('dashboard');
@@ -214,7 +215,7 @@ const App: React.FC = () => {
           {currentView === 'dashboard' && isAdmin && (
             <Dashboard
               projects={visibleProjects}
-              navigateToProject={(id) => navigateTo('project-details', id)}
+              navigateToProject={(id: string) => navigateTo('project-details', id)}
               navigateToProjectsList={() => navigateTo('projects')}
               userRole={data.currentUser.role}
             />
@@ -223,7 +224,7 @@ const App: React.FC = () => {
             <ProjectsList
               projects={visibleProjects}
               users={data.users}
-              onSelectProject={(id) => navigateTo('project-details', id)}
+              onSelectProject={(id: string) => navigateTo('project-details', id)}
               currentUser={data.currentUser}
             />
           )}
@@ -232,7 +233,7 @@ const App: React.FC = () => {
               project={activeProject}
               users={data.users}
               suppliers={data.suppliers}
-              onUpdateProject={(p) => api.saveProject(p)}
+              onUpdateProject={(p: Project) => api.saveProject(p)}
               currentUser={data.currentUser}
             />
           )}
@@ -253,8 +254,8 @@ const App: React.FC = () => {
           {currentView === 'admin-expenses' && isAdmin && (
             <AdminExpenses
               expenses={data.adminExpenses}
-              onSaveExpense={(newExpense) => api.saveAdminExpense(newExpense)}
-              onDeleteExpense={(id) => api.deleteAdminExpense(id)}
+              onSaveExpense={(newExpense: Expense) => api.saveAdminExpense(newExpense)}
+              onDeleteExpense={(id: string) => api.deleteAdminExpense(id)}
               currentUser={data.currentUser}
               suppliers={data.suppliers}
             />
