@@ -239,7 +239,6 @@ const App: React.FC = () => {
           )}
           {currentView === 'users' && isAdmin && (
             <UserManagement
-              canary="test_sync_v1"
               users={data.users}
               onSaveUser={(user: User) => api.saveUser(user)}
               onDeleteUser={(id: string) => api.deleteUser(id)}
