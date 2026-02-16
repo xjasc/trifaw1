@@ -7,7 +7,6 @@ import Dashboard from './components/Dashboard';
 import ProjectsList from './components/ProjectsList';
 import ProjectDetails from './components/ProjectDetails';
 import UserManagement from './components/UserManagement';
-import UserManagement from './components/UserManagement';
 import SupplierManagement from './components/SupplierManagement';
 import AdminExpenses from './components/AdminExpenses';
 import Login from './components/Login';
@@ -240,15 +239,15 @@ const App: React.FC = () => {
           {currentView === 'users' && isAdmin && (
             <UserManagement
               users={data.users}
-              onSaveUser={(user) => api.saveUser(user)}
-              onDeleteUser={(id) => api.deleteUser(id)}
+              onSaveUser={(user: User) => api.saveUser(user)}
+              onDeleteUser={(id: string) => api.deleteUser(id)}
             />
           )}
           {currentView === 'suppliers' && isAdmin && (
             <SupplierManagement
               suppliers={data.suppliers}
-              onSaveSupplier={(supplier) => api.saveSupplier(supplier)}
-              onDeleteSupplier={(id) => api.deleteSupplier(id)}
+              onSaveSupplier={(supplier: Supplier) => api.saveSupplier(supplier)}
+              onDeleteSupplier={(id: string) => api.deleteSupplier(id)}
             />
           )}
           {currentView === 'admin-expenses' && isAdmin && (
