@@ -1,4 +1,5 @@
 
+// VERSION: 20260216_0905_FORCE_SYNC
 import React, { useState, useEffect, useMemo } from 'react';
 import { AppData, User, Project, UserRole, Supplier, Expense } from './types';
 import { api } from './services/apiService';
