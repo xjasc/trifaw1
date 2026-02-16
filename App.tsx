@@ -1,16 +1,15 @@
-
 // VERSION: 20260216_0905_FORCE_SYNC
 import React, { useState, useEffect, useMemo } from 'react';
 import { AppData, User, Project, UserRole, Supplier, Expense } from './types';
 import { api } from './services/apiService';
-import Sidebar from './components/Sidebar';
-import Dashboard from './components/Dashboard';
-import ProjectsList from './components/ProjectsList';
-import ProjectDetails from './components/ProjectDetails';
-import UserManagement from './components/UserManagement';
-import SupplierManagement from './components/SupplierManagement';
-import AdminExpenses from './components/AdminExpenses';
-import Login from './components/Login';
+import Sidebar from './components/Sidebar.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import ProjectsList from './components/ProjectsList.tsx';
+import ProjectDetails from './components/ProjectDetails.tsx';
+import UserManagement from './components/UserManagement.tsx';
+import SupplierManagement from './components/SupplierManagement.tsx';
+import AdminExpenses from './components/AdminExpenses.tsx';
+import Login from './components/Login.tsx';
 
 const App: React.FC = () => {
   const [data, setData] = useState<AppData>({
@@ -240,6 +239,7 @@ const App: React.FC = () => {
           )}
           {currentView === 'users' && isAdmin && (
             <UserManagement
+              canary="test_sync_v1"
               users={data.users}
               onSaveUser={(user: User) => api.saveUser(user)}
               onDeleteUser={(id: string) => api.deleteUser(id)}
