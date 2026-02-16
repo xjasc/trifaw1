@@ -1,4 +1,4 @@
-
+// VERSION: 20260216_0905_FORCE_SYNC
 import { AppData, UserRole, ProjectStatus, ExpenseStatus } from '../types';
 
 const STORAGE_KEY = 'trifaw_sgi_data_v6';
@@ -6,16 +6,17 @@ const STORAGE_KEY = 'trifaw_sgi_data_v6';
 const INITIAL_DATA: AppData = {
   projects: [],
   users: [
-    { 
-      id: 'master-arao', 
-      name: 'Arão Costa - TRIFAW', 
-      email: 'arao.costa@trifaw.com.br', 
-      password: '198615', 
-      role: UserRole.ADMIN 
+    {
+      id: 'master-arao',
+      name: 'Arão Costa - TRIFAW',
+      email: 'arao.costa@trifaw.com.br',
+      password: '198615',
+      role: UserRole.ADMIN
     }
   ],
   suppliers: [],
-  currentUser: null
+  currentUser: null,
+  adminExpenses: []
 };
 
 export const loadData = (): AppData => {
@@ -27,6 +28,7 @@ export const loadData = (): AppData => {
         return INITIAL_DATA;
       }
       if (!parsed.suppliers) parsed.suppliers = [];
+      if (!parsed.adminExpenses) parsed.adminExpenses = [];
       return parsed;
     } catch (e) {
       console.error("Erro ao carregar dados do LocalStorage", e);

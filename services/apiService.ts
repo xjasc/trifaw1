@@ -1,11 +1,12 @@
+// VERSION: 20260216_0905_FORCE_SYNC
 import { AppData, User, Project, Supplier, UserRole } from '../types';
 import { db } from './firebase';
-import { 
-  collection, 
-  onSnapshot, 
-  doc, 
-  setDoc, 
-  deleteDoc, 
+import {
+  collection,
+  onSnapshot,
+  doc,
+  setDoc,
+  deleteDoc,
   getDoc
 } from "firebase/firestore";
 
@@ -13,7 +14,7 @@ type Callback = (data: Partial<AppData>) => void;
 
 export const api = {
   subscribeToData(callback: Callback) {
-    if (!db) return () => {};
+    if (!db) return () => { };
 
     try {
       const unsubProjects = onSnapshot(collection(db, "projects"), (snapshot) => {
@@ -31,14 +32,20 @@ export const api = {
         callback({ suppliers });
       }, (error) => console.error("Snapshot error (suppliers):", error));
 
+      const unsubAdminExpenses = onSnapshot(collection(db, "admin_expenses"), (snapshot) => {
+        const adminExpenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+        callback({ adminExpenses });
+      }, (error) => console.error("Snapshot error (admin_expenses):", error));
+
       return () => {
         unsubProjects();
         unsubUsers();
         unsubSuppliers();
+        unsubAdminExpenses();
       };
     } catch (e) {
       console.error("Critical error subscribing to Firebase:", e);
-      return () => {};
+      return () => { };
     }
   },
 
@@ -46,14 +53,14 @@ export const api = {
     try {
       const masterId = 'master-arao';
       const userDoc = await getDoc(doc(db, "users", masterId));
-      
+
       if (!userDoc.exists()) {
-        const master: User = { 
-          id: masterId, 
-          name: 'Arão Costa - TRIFAW', 
-          email: 'arao.costa@trifaw.com.br', 
-          password: '198615', 
-          role: UserRole.ADMIN 
+        const master: User = {
+          id: masterId,
+          name: 'Arão Costa - TRIFAW',
+          email: 'arao.costa@trifaw.com.br',
+          password: '198615',
+          role: UserRole.ADMIN
         };
         await setDoc(doc(db, "users", masterId), master);
       }
@@ -109,6 +116,24 @@ export const api = {
       await deleteDoc(doc(db, "suppliers", id));
     } catch (e) {
       console.error("Error deleting supplier:", e);
+    }
+  },
+
+  async saveAdminExpense(expense: any): Promise<void> {
+    try {
+      await setDoc(doc(db, "admin_expenses", expense.id), expense);
+    } catch (e) {
+      console.error("Error saving admin expense:", e);
+      throw new Error("Erro ao salvar despesa.");
+    }
+  },
+
+  async deleteAdminExpense(id: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, "admin_expenses", id));
+    } catch (e) {
+      console.error("Error deleting admin expense:", e);
+      throw new Error("Erro ao excluir despesa.");
     }
   }
 };
