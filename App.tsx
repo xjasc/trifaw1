@@ -7,7 +7,9 @@ import Dashboard from './components/Dashboard';
 import ProjectsList from './components/ProjectsList';
 import ProjectDetails from './components/ProjectDetails';
 import UserManagement from './components/UserManagement';
+import UserManagement from './components/UserManagement';
 import SupplierManagement from './components/SupplierManagement';
+import AdminExpenses from './components/AdminExpenses';
 import Login from './components/Login';
 
 const App: React.FC = () => {
@@ -17,8 +19,8 @@ const App: React.FC = () => {
     suppliers: [],
     currentUser: null
   });
-  
-  const [currentView, setCurrentView] = useState<'dashboard' | 'projects' | 'project-details' | 'users' | 'suppliers'>('dashboard');
+
+  const [currentView, setCurrentView] = useState<'dashboard' | 'projects' | 'project-details' | 'users' | 'suppliers' | 'admin-expenses'>('dashboard');
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,9 +60,10 @@ const App: React.FC = () => {
     setIsMobileMenuOpen(false);
   };
 
-  const navigateTo = (view: 'dashboard' | 'projects' | 'project-details' | 'users' | 'suppliers', projectId: string | null = null) => {
+
+  const navigateTo = (view: 'dashboard' | 'projects' | 'project-details' | 'users' | 'suppliers' | 'admin-expenses', projectId: string | null = null) => {
     if (!data.currentUser) return;
-    
+
     if (!isAdmin && (view === 'dashboard' || view === 'users' || view === 'suppliers')) {
       setCurrentView('projects');
       setActiveProjectId(null);
@@ -110,7 +113,7 @@ const App: React.FC = () => {
         <div className="relative">
           <div className="w-24 h-24 border-4 border-emerald-700 border-t-white rounded-full animate-spin"></div>
           <div className="absolute inset-0 flex items-center justify-center">
-             <span className="font-saira font-black text-white text-4xl pt-1">T</span>
+            <span className="font-saira font-black text-white text-4xl pt-1">T</span>
           </div>
         </div>
         <div className="text-center">
@@ -127,9 +130,9 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden relative font-inter">
-      <Sidebar 
-        currentView={currentView} 
-        navigateTo={navigateTo} 
+      <Sidebar
+        currentView={currentView}
+        navigateTo={navigateTo}
         currentUser={data.currentUser}
         onLogout={handleLogout}
         isOpen={isMobileMenuOpen}
@@ -138,107 +141,124 @@ const App: React.FC = () => {
 
       {/* Main Content Area - Fundo Global Aplicado (engineering-bg) */}
       <main className="flex-1 flex flex-col overflow-hidden relative w-full engineering-bg">
-        
+
         {/* HEADER UNIFICADO VISUALMENTE COM A SIDEBAR */}
         <header className="h-16 md:h-20 bg-emerald-950 border-b border-emerald-900/50 flex items-center justify-between px-4 md:px-8 shrink-0 z-20 shadow-lg gap-4 relative overflow-hidden">
-           
-           {/* Background Image CONTINUAÇÃO EXATA */}
-           <div className="absolute inset-0 z-0">
-             {/* bg-fixed garante que a imagem esteja na mesma posição da sidebar */}
-             <div 
-               className="absolute inset-0 bg-cover bg-fixed bg-left-top opacity-30 grayscale-[20%]"
-               style={{ 
-                 backgroundImage: `url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&q=80&w=2070')` 
-               }}
-             ></div>
-             
-             {/* Gradiente similar ao da sidebar, mas horizontal para o header */}
-             <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-900/90 to-emerald-950/95 mix-blend-multiply"></div>
-           </div>
 
-           {/* Conteúdo do Header (z-10 para ficar acima da textura) */}
-           <div className="relative z-10 flex w-full items-center justify-between">
-              <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
-                {currentView === 'project-details' ? (
-                  <button 
-                    onClick={() => navigateTo('projects')}
-                    className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-white bg-white/10 border border-white/10 rounded-xl hover:bg-white hover:text-emerald-950 transition-all shadow-sm shrink-0 backdrop-blur-sm"
-                  >
-                    <i className="fa-solid fa-arrow-left"></i>
-                  </button>
-                ) : (
-                  <button 
-                    onClick={() => setIsMobileMenuOpen(true)}
-                    className="md:hidden w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-white bg-white/10 border border-white/10 rounded-xl shrink-0 backdrop-blur-sm"
-                  >
-                    <i className="fa-solid fa-bars-staggered"></i>
-                  </button>
-                )}
-                
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[10px] md:text-xs font-black text-emerald-400 uppercase tracking-[0.15em] truncate drop-shadow-md font-saira">
-                      TRIFAW ENGENHARIA
-                    </p>
-                  </div>
-                  <p className="text-sm md:text-base font-black text-white uppercase truncate leading-tight italic tracking-normal drop-shadow-lg font-saira">
-                    {currentView === 'dashboard' && 'Painel Geral Estratégico'}
-                    {currentView === 'projects' && 'Gerenciamento de Projetos'}
-                    {currentView === 'project-details' && (activeProject?.name || 'Detalhes Técnicos')}
-                    {currentView === 'users' && 'Gestão de Acessos'}
-                    {currentView === 'suppliers' && 'Catálogo de Fornecedores'}
+          {/* Background Image CONTINUAÇÃO EXATA */}
+          <div className="absolute inset-0 z-0">
+            {/* bg-fixed garante que a imagem esteja na mesma posição da sidebar */}
+            <div
+              className="absolute inset-0 bg-cover bg-fixed bg-left-top opacity-30 grayscale-[20%]"
+              style={{
+                backgroundImage: `url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&q=80&w=2070')`
+              }}
+            ></div>
+
+            {/* Gradiente similar ao da sidebar, mas horizontal para o header */}
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-900/90 to-emerald-950/95 mix-blend-multiply"></div>
+          </div>
+
+          {/* Conteúdo do Header (z-10 para ficar acima da textura) */}
+          <div className="relative z-10 flex w-full items-center justify-between">
+            <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+              {currentView === 'project-details' ? (
+                <button
+                  onClick={() => navigateTo('projects')}
+                  className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-white bg-white/10 border border-white/10 rounded-xl hover:bg-white hover:text-emerald-950 transition-all shadow-sm shrink-0 backdrop-blur-sm"
+                >
+                  <i className="fa-solid fa-arrow-left"></i>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="md:hidden w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-white bg-white/10 border border-white/10 rounded-xl shrink-0 backdrop-blur-sm"
+                >
+                  <i className="fa-solid fa-bars-staggered"></i>
+                </button>
+              )}
+
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-[10px] md:text-xs font-black text-emerald-400 uppercase tracking-[0.15em] truncate drop-shadow-md font-saira">
+                    TRIFAW ENGENHARIA
                   </p>
                 </div>
+                <p className="text-sm md:text-base font-black text-white uppercase truncate leading-tight italic tracking-normal drop-shadow-lg font-saira">
+                  {currentView === 'dashboard' && 'Painel Geral Estratégico'}
+                  {currentView === 'projects' && 'Gerenciamento de Projetos'}
+                  {currentView === 'project-details' && (activeProject?.name || 'Detalhes Técnicos')}
+                  {currentView === 'users' && 'Gestão de Acessos'}
+                  {currentView === 'suppliers' && 'Catálogo de Fornecedores'}
+                </p>
               </div>
-              
-              <div className="flex items-center gap-2 md:gap-3 shrink-0 ml-4">
-                 <div className="text-right hidden md:flex flex-col justify-center min-w-0 pr-1">
-                   <p className="text-[11px] md:text-sm font-black text-white leading-tight uppercase tracking-tight truncate max-w-[200px] drop-shadow-md font-saira">
-                     {data.currentUser.name}
-                   </p>
-                   <p className="text-[8px] text-emerald-300 font-bold uppercase tracking-widest mt-0.5 opacity-90 font-saira">
-                     {data.currentUser.role}
-                   </p>
-                 </div>
-                 {/* Avatar Invertido para destaque no fundo escuro */}
-                 <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-white flex items-center justify-center text-emerald-950 font-black text-sm shadow-xl shadow-black/20 shrink-0 border border-white/20 font-saira">
-                    {data.currentUser.name.charAt(0)}
-                 </div>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-3 shrink-0 ml-4">
+              <div className="text-right hidden md:flex flex-col justify-center min-w-0 pr-1">
+                <p className="text-[11px] md:text-sm font-black text-white leading-tight uppercase tracking-tight truncate max-w-[200px] drop-shadow-md font-saira">
+                  {data.currentUser.name}
+                </p>
+                <p className="text-[8px] text-emerald-300 font-bold uppercase tracking-widest mt-0.5 opacity-90 font-saira">
+                  {data.currentUser.role}
+                </p>
               </div>
-           </div>
+              {/* Avatar Invertido para destaque no fundo escuro */}
+              <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-white flex items-center justify-center text-emerald-950 font-black text-sm shadow-xl shadow-black/20 shrink-0 border border-white/20 font-saira">
+                {data.currentUser.name.charAt(0)}
+              </div>
+            </div>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar relative z-10">
           {currentView === 'dashboard' && isAdmin && (
-            <Dashboard 
-              projects={visibleProjects} 
-              navigateToProject={(id) => navigateTo('project-details', id)} 
-              navigateToProjectsList={() => navigateTo('projects')} 
-              userRole={data.currentUser.role} 
+            <Dashboard
+              projects={visibleProjects}
+              navigateToProject={(id) => navigateTo('project-details', id)}
+              navigateToProjectsList={() => navigateTo('projects')}
+              userRole={data.currentUser.role}
             />
           )}
           {currentView === 'projects' && (
-            <ProjectsList 
-              projects={visibleProjects} 
-              users={data.users} 
-              onSelectProject={(id) => navigateTo('project-details', id)} 
-              currentUser={data.currentUser} 
+            <ProjectsList
+              projects={visibleProjects}
+              users={data.users}
+              onSelectProject={(id) => navigateTo('project-details', id)}
+              currentUser={data.currentUser}
             />
           )}
           {currentView === 'project-details' && activeProject && (
-            <ProjectDetails 
-              project={activeProject} 
-              users={data.users} 
-              suppliers={data.suppliers} 
-              onUpdateProject={(p) => api.saveProject(p)} 
-              currentUser={data.currentUser} 
+            <ProjectDetails
+              project={activeProject}
+              users={data.users}
+              suppliers={data.suppliers}
+              onUpdateProject={(p) => api.saveProject(p)}
+              currentUser={data.currentUser}
             />
           )}
           {currentView === 'users' && isAdmin && (
-            <UserManagement users={data.users} onUpdateUsers={() => {}} /> 
+            <UserManagement
+              users={data.users}
+              onSaveUser={(user) => api.saveUser(user)}
+              onDeleteUser={(id) => api.deleteUser(id)}
+            />
           )}
           {currentView === 'suppliers' && isAdmin && (
-            <SupplierManagement suppliers={data.suppliers} onUpdateSuppliers={() => {}} />
+            <SupplierManagement
+              suppliers={data.suppliers}
+              onSaveSupplier={(supplier) => api.saveSupplier(supplier)}
+              onDeleteSupplier={(id) => api.deleteSupplier(id)}
+            />
+          )}
+          {currentView === 'admin-expenses' && isAdmin && (
+            <AdminExpenses
+              expenses={data.adminExpenses}
+              onSaveExpense={(newExpense) => api.saveAdminExpense(newExpense)}
+              onDeleteExpense={(id) => api.deleteAdminExpense(id)}
+              currentUser={data.currentUser}
+              suppliers={data.suppliers}
+            />
           )}
         </div>
       </main>

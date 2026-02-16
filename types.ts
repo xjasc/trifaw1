@@ -96,6 +96,15 @@ export interface ResponsibleData {
   name: string;
 }
 
+export interface ProjectStage {
+  id: string;
+  name: string;
+  weight: number; // Percentage 0-100
+  expectedCost: number;
+  realCost: number;
+  progress: number; // 0-100
+}
+
 export interface Project {
   id: string;
   projectCode?: string; // Código Internacional do Projeto
@@ -127,6 +136,21 @@ export interface Project {
   activities: ProjectActivity[];
   physicalProgress: number; 
   createdBy: string;
+  stages?: ProjectStage[]; // Nova estrutura de etapas
+}
+
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  status: ExpenseStatus;
+  supplier: string;
+  date: string;
+  createdBy: string;
+  attachmentUrl?: string; // Link para Nota Fiscal ou Recibo
+  stageId?: string; // Vínculo com etapa do projeto
+  projectId?: string; // Opcional para despesas administrativas (sem projeto)
 }
 
 export interface AppData {
@@ -134,4 +158,5 @@ export interface AppData {
   users: User[];
   suppliers: Supplier[];
   currentUser: User | null;
+  adminExpenses: Expense[]; // Nova lista de despesas administrativas
 }

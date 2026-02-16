@@ -3,7 +3,7 @@ import React from 'react';
 
 export const COLORS = {
   primary: '#022c22', // Deep Forest (Emerald 950)
-  primaryDark: '#011c16', 
+  primaryDark: '#011c16',
   primaryLight: '#065f46', // Emerald 800
   secondary: '#fafaf9', // Stone 50
   accent: '#b45309', // Copper (Amber 700)
@@ -16,40 +16,48 @@ export const COLORS = {
   bgLight: '#e6e4e0', // Concrete Base
 };
 
-export const CATEGORY_COLORS: Record<string, string> = {
-  'Materiais': '#022c22',    // Deep Forest
-  'Mão de Obra': '#0f766e',  // Teal Deep
-  'Equipamentos': '#b45309', // Copper/Terra
-  'Locações': '#78350f',     // Dark Earth
-  'Serviços': '#451a03',     // Bronze Dark
-  'Outros': '#57534e'        // Stone
-};
+export const CATEGORY_OBJ = [
+  { id: 'materials', label: 'Materiais', color: '#022c22', icon: 'fa-boxes-stacked' },
+  { id: 'labor', label: 'Mão de Obra', color: '#0f766e', icon: 'fa-users-gear' },
+  { id: 'equipment', label: 'Equipamentos', color: '#b45309', icon: 'fa-tractor' },
+  { id: 'rentals', label: 'Locações', color: '#78350f', icon: 'fa-truck-ramp-box' },
+  { id: 'services', label: 'Serviços', color: '#451a03', icon: 'fa-handshake' },
+  { id: 'others', label: 'Outros', color: '#57534e', icon: 'fa-ellipsis' }
+];
 
-export const CATEGORY_ICONS: Record<string, string> = {
-  'Materiais': 'fa-boxes-stacked',
-  'Mão de Obra': 'fa-users-gear',
-  'Equipamentos': 'fa-tractor',
-  'Locações': 'fa-truck-ramp-box',
-  'Serviços': 'fa-handshake',
-  'Outros': 'fa-ellipsis'
-};
+export const CATEGORIES = CATEGORY_OBJ; // Alias para compatibilidade futura se necessário
+export const CATEGORY_COLORS: Record<string, string> = CATEGORY_OBJ.reduce((acc, c) => ({ ...acc, [c.id]: c.color }), {});
+export const CATEGORY_ICONS: Record<string, string> = CATEGORY_OBJ.reduce((acc, c) => ({ ...acc, [c.id]: c.icon }), {});
 
-export const CATEGORIES = Object.keys(CATEGORY_COLORS);
+// Helper legacy para manter compatibilidade onde usa string direta (se houver, mas vamos migrar)
+export const CATEGORY_LABELS: Record<string, string> = CATEGORY_OBJ.reduce((acc, c) => ({ ...acc, [c.id]: c.label }), {});
+
 
 export const Logo: React.FC<{ className?: string }> = ({ className }) => (
   <div className={`flex items-center gap-3 ${className}`}>
-    {/* Ícone T Quadrado */}
-    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shrink-0 shadow-xl border-b-4 border-emerald-800">
-        <span className="font-['Saira'] font-black text-emerald-950 text-4xl leading-none pt-1">T</span>
-    </div>
-    {/* Texto */}
-    <div className="flex flex-col -space-y-1">
-      <h1 className="text-white font-['Saira'] font-black text-2xl tracking-tighter leading-none italic uppercase">
-        TRIFAW
-      </h1>
-      <div className="mt-0">
-        <span className="text-emerald-400 font-['Saira'] text-[10px] font-bold tracking-[0.2em] uppercase block leading-none pl-0.5">ENGENHARIA</span>
-      </div>
-    </div>
+    <img src="/logo.png" alt="TRIFAW Engenharia" className="h-12 w-auto object-contain" />
   </div>
 );
+
+export const PROJECT_STAGES_DEFAULT = [
+  { name: 'PRELIMINARES', weight: 3.10 },
+  { name: 'INFRAESTRUTURA', weight: 7.00 },
+  { name: 'SUPRAESTRUTURA', weight: 12.50 },
+  { name: 'PAREDES E PAINEIS', weight: 8.00 },
+  { name: 'ESQUADRIAS', weight: 4.50 },
+  { name: 'VIDROS E PLÁSTICOS', weight: 0.00 },
+  { name: 'COBERTURAS', weight: 5.00 },
+  { name: 'IMPERMEBAILIZAÇÕES', weight: 9.00 },
+  { name: 'REVESTIMENTOS INTERNOS', weight: 6.90 },
+  { name: 'FORROS', weight: 1.00 },
+  { name: 'REVESTIMENTOS EXTERNOS', weight: 4.00 },
+  { name: 'PINTURA', weight: 3.70 },
+  { name: 'PISOS', weight: 8.50 },
+  { name: 'ACABAMENTOS', weight: 1.11 },
+  { name: 'INST. ELÉTRICAS', weight: 3.80 },
+  { name: 'INST. HIDRÁULICAS', weight: 3.70 },
+  { name: 'INST. ESGOTOS E PLUV.', weight: 3.70 },
+  { name: 'LOUÇAS E METAIS', weight: 4.20 },
+  { name: 'COMPLEMENTOS', weight: 0.30 },
+  { name: 'OUTROS SERVIÇOS.', weight: 9.99 }
+];
