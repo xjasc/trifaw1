@@ -301,18 +301,51 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
     }, [localStages, project.budget, project.expenses]);
 
     const handleStageWeightChange = (index: number, newWeight: string) => {
-        const weight = parseFloat(newWeight);
+        let weight = parseFloat(newWeight.replace(',', '.'));
         if (isNaN(weight)) return;
 
         const updatedStages = [...localStages];
-        updatedStages[index] = { ...updatedStages[index], weight };
+        const expectedCost = (project.budget || 0) * (weight / 100);
+        updatedStages[index] = { ...updatedStages[index], weight, expectedCost };
         setLocalStages(updatedStages);
     };
 
+    const handleStageExpectedCostChange = (index: number, newCost: string) => {
+        let expectedCost = parseFloat(newCost.replace(',', '.'));
+        if (isNaN(expectedCost)) return;
+
+        const updatedStages = [...localStages];
+        const weight = project.budget > 0 ? (expectedCost / project.budget) * 100 : 0;
+        updatedStages[index] = { ...updatedStages[index], expectedCost, weight };
+        setLocalStages(updatedStages);
+    };
+
+    const handleStageProgressChange = (index: number, newProgress: string) => {
+        let progress = parseFloat(newProgress.replace(',', '.'));
+        if (isNaN(progress)) progress = 0;
+        progress = Math.max(0, Math.min(100, progress));
+
+        const updatedStages = [...localStages];
+        updatedStages[index] = { ...updatedStages[index], progress };
+        setLocalStages(updatedStages);
+    };
+
+    // Cálculo do Avanço Físico Geral Ponderado
+    const totalPhysicalProgress = useMemo(() => {
+        const total = projectStages.reduce((acc, stage) => {
+            return acc + (stage.progress * (stage.weight / 100));
+        }, 0);
+        return Math.round(total);
+    }, [projectStages]);
+
     const saveStagesChanges = async () => {
         try {
-            await api.saveProject({ ...project, stages: localStages });
-            alert("Pesos das etapas atualizados com sucesso!");
+            await api.saveProject({
+                ...project,
+                stages: localStages,
+                physicalProgress: totalPhysicalProgress
+            });
+            alert("Etapas e avanço global atualizados com sucesso!");
         } catch (err) { console.error("Erro ao salvar etapas", err); alert("Erro ao salvar."); }
     };
 
@@ -664,13 +697,13 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                             <span className="text-[8px] font-black uppercase text-stone-400 tracking-widest group-hover:text-emerald-700 transition-colors">Avanço Físico Geral</span>
                             <i className={`fa-solid fa-chevron-down text-stone-300 text-[10px] transition-transform duration-300 ${showStagesAccordion ? 'rotate-180 text-emerald-600' : ''}`}></i>
                         </button>
-                        <span className="text-lg font-black text-emerald-900 italic">{project.physicalProgress || 0}%</span>
+                        <span className="text-lg font-black text-emerald-900 italic">{totalPhysicalProgress}%</span>
                     </div>
 
                     <div className="h-3 bg-stone-100 rounded-full overflow-hidden relative border border-stone-200 mb-2">
-                        <div className="h-full bg-emerald-800 rounded-full transition-all duration-1000" style={{ width: `${project.physicalProgress || 0}%` }}></div>
-                        {/* Slider global mantido */}
-                        {isAdmin && <input type="range" min="0" max="100" value={project.physicalProgress || 0} onChange={(e) => onUpdateProject({ ...project, physicalProgress: parseInt(e.target.value) })} className="absolute inset-0 w-full opacity-0 cursor-pointer" title="Ajuste manual do avanço global" />}
+                        <div className="h-full bg-emerald-800 rounded-full transition-all duration-1000" style={{ width: `${totalPhysicalProgress}%` }}></div>
+                        {/* Slider global desativado para privilegiar cálculo por etapas */}
+                        <div className="absolute inset-0 w-full opacity-0 pointer-events-none" title="Avanço calculado pelas etapas"></div>
                     </div>
 
                     {/* Accordion de Etapas */}
@@ -729,7 +762,20 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                         )}
                                                     </td>
                                                     <td className="py-2 px-3 text-right">
-                                                        <span className="text-[9px] font-bold text-stone-500">{formatBRL(stage.expectedCost)}</span>
+                                                        {isAdmin ? (
+                                                            <div className="flex items-center justify-end gap-1">
+                                                                <span className="text-[8px] font-bold text-stone-400">R$</span>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    value={stage.expectedCost}
+                                                                    onChange={(e) => handleStageExpectedCostChange(idx, e.target.value)}
+                                                                    className="w-20 text-right bg-white border border-stone-200 rounded px-1 py-0.5 text-[9px] font-bold text-stone-700 section-focus outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-[9px] font-bold text-stone-500">{formatBRL(stage.expectedCost)}</span>
+                                                        )}
                                                     </td>
                                                     <td className="py-2 px-3 text-right">
                                                         <span className={`text-[9px] font-bold ${isOverBudget ? 'text-red-600' : stage.realCost > 0 ? 'text-emerald-600' : 'text-stone-300'}`}>
@@ -737,11 +783,32 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                         </span>
                                                     </td>
                                                     <td className="py-2 px-3">
-                                                        <div className="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden border border-stone-200">
-                                                            <div
-                                                                className={`h-full rounded-full ${isOverBudget ? 'bg-red-400' : 'bg-emerald-400'}`}
-                                                                style={{ width: `${Math.min(stage.progress, 100)}%` }}
-                                                            ></div>
+                                                        <div className="flex flex-col items-center gap-1.5">
+                                                            {isAdmin ? (
+                                                                <div className="flex items-center gap-1.5 w-full">
+                                                                    <div className="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden border border-stone-200">
+                                                                        <div
+                                                                            className={`h-full rounded-full ${isOverBudget ? 'bg-red-400' : 'bg-emerald-400'}`}
+                                                                            style={{ width: `${Math.min(stage.progress, 100)}%` }}
+                                                                        ></div>
+                                                                    </div>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        max="100"
+                                                                        value={stage.progress}
+                                                                        onChange={(e) => handleStageProgressChange(idx, e.target.value)}
+                                                                        className="w-10 text-center bg-white border border-stone-200 rounded px-1 py-0.5 text-[9px] font-black text-emerald-700 section-focus outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
+                                                                    />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden border border-stone-200">
+                                                                    <div
+                                                                        className={`h-full rounded-full ${isOverBudget ? 'bg-red-400' : 'bg-emerald-400'}`}
+                                                                        style={{ width: `${Math.min(stage.progress, 100)}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </td>
                                                 </tr>
