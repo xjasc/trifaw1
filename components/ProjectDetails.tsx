@@ -273,32 +273,22 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
         }
     }, [project.stages]);
 
-    // CÁLCULO DAS ETAPAS DO PROJETO (ORÇADO vs REALIZADO) COM PESOS DINÂMICOS
+    // CÁLCULO DAS ETAPAS DO PROJETO (ORÇADO vs REALIZADO) - VALORES MANUAIS
     const projectStages = useMemo(() => {
-        return localStages.map((stage, idx) => {
-            const stageId = stage.name; // ID continua sendo o nome
-            const expectedCost = (project.budget || 0) * (stage.weight / 100);
+        return localStages.map((stage) => {
+            const stageId = stage.name;
 
             // Somar despesas desta etapa
             const stageExpenses = (project.expenses || []).filter(e => e.stageId === stageId);
             const realCost = stageExpenses.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
 
-            // Progresso Financeiro
-            let progress = 0;
-            if (expectedCost > 0) {
-                progress = (realCost / expectedCost) * 100;
-            } else if (realCost > 0) {
-                progress = 100;
-            }
-
+            // Retornamos o que está no localStages (manual) + o realCost calculado
             return {
                 ...stage,
-                expectedCost,
-                realCost,
-                progress
+                realCost
             };
         });
-    }, [localStages, project.budget, project.expenses]);
+    }, [localStages, project.expenses]);
 
     const handleStageWeightChange = (index: number, newWeight: string) => {
         let weight = parseFloat(newWeight.replace(',', '.'));
@@ -719,7 +709,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                         onClick={saveStagesChanges}
                                         className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-[9px] font-black uppercase tracking-wide transition-colors border border-emerald-200"
                                     >
-                                        <i className="fa-solid fa-floppy-disk mr-1"></i> Salvar Pesos
+                                        <i className="fa-solid fa-floppy-disk mr-1"></i> Salvar Etapas
                                     </button>
                                 )}
                             </div>
@@ -732,7 +722,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                             <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Peso (%)</th>
                                             <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider">Custo Esp.</th>
                                             <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider">Custo Real</th>
-                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider">Status</th>
+                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider">Avanço (%)</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-stone-50">
@@ -2014,9 +2004,8 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                             </div>
                         </div>
                     </div>
-                )
-            }
-        </div >
+                )}
+        </div>
     );
 };
 

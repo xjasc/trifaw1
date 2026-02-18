@@ -211,7 +211,7 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar relative z-10">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10">
           {currentView === 'dashboard' && isAdmin && (
             <Dashboard
               projects={visibleProjects}
