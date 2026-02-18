@@ -282,10 +282,13 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
             const stageExpenses = (project.expenses || []).filter(e => e.stageId === stageId);
             const realCost = stageExpenses.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
 
-            // Retornamos o que está no localStages (manual) + o realCost calculado
+            // Retornamos o que está no localStages (manual) + o realCost calculado + avanço financeiro automático
+            const financialProgress = stage.expectedCost > 0 ? Math.min((realCost / stage.expectedCost) * 100, 100) : (realCost > 0 ? 100 : 0);
+
             return {
                 ...stage,
-                realCost
+                realCost,
+                financialProgress
             };
         });
     }, [localStages, project.expenses]);
@@ -751,54 +754,65 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                             <span className="text-[9px] font-bold text-stone-500">{stage.weight.toFixed(2)}%</span>
                                                         )}
                                                     </td>
-                                                    <td className="py-2 px-3 text-right">
-                                                        {isAdmin ? (
-                                                            <div className="flex items-center justify-end gap-1">
-                                                                <span className="text-[8px] font-bold text-stone-400">R$</span>
-                                                                <input
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    value={stage.expectedCost}
-                                                                    onChange={(e) => handleStageExpectedCostChange(idx, e.target.value)}
-                                                                    className="w-20 text-right bg-white border border-stone-200 rounded px-1 py-0.5 text-[9px] font-bold text-stone-700 section-focus outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
-                                                                />
+                                                    <td className="py-2 px-3">
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <div className="text-right flex flex-col">
+                                                                    <div className="flex items-center justify-end gap-1">
+                                                                        <span className="text-[7px] font-bold text-stone-400 uppercase">Esp.</span>
+                                                                        {isAdmin ? (
+                                                                            <input
+                                                                                type="number"
+                                                                                step="0.01"
+                                                                                value={stage.expectedCost}
+                                                                                onChange={(e) => handleStageExpectedCostChange(idx, e.target.value)}
+                                                                                className="w-20 text-right bg-white border border-stone-200 rounded px-1 py-0.5 text-[10px] font-bold text-stone-700 outline-none focus:border-emerald-400"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-[10px] font-bold text-stone-600">{formatBRL(stage.expectedCost)}</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                                                                        <span className="text-[7px] font-bold text-stone-400 uppercase">Real</span>
+                                                                        <span className={`text-[10px] font-black ${isOverBudget ? 'text-red-600' : 'text-emerald-700'}`}>{formatBRL(stage.realCost)}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${isOverBudget ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}`}>
+                                                                    <i className={`fa-solid ${isOverBudget ? 'fa-triangle-exclamation' : 'fa-check'}`}></i>
+                                                                </div>
                                                             </div>
-                                                        ) : (
-                                                            <span className="text-[9px] font-bold text-stone-500">{formatBRL(stage.expectedCost)}</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-2 px-3 text-right">
-                                                        <span className={`text-[9px] font-bold ${isOverBudget ? 'text-red-600' : stage.realCost > 0 ? 'text-emerald-600' : 'text-stone-300'}`}>
-                                                            {formatBRL(stage.realCost)}
-                                                        </span>
+                                                        </div>
                                                     </td>
                                                     <td className="py-2 px-3">
-                                                        <div className="flex flex-col items-center gap-1.5">
-                                                            {isAdmin ? (
-                                                                <div className="flex items-center gap-1.5 w-full">
-                                                                    <div className="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden border border-stone-200">
-                                                                        <div
-                                                                            className={`h-full rounded-full ${isOverBudget ? 'bg-red-400' : 'bg-emerald-400'}`}
-                                                                            style={{ width: `${Math.min(stage.progress, 100)}%` }}
-                                                                        ></div>
-                                                                    </div>
+                                                        <div className="flex flex-col items-center gap-1 group/slider">
+                                                            <div className="flex items-center justify-between w-full px-1">
+                                                                <span className="text-[10px] font-black text-emerald-800 italic">{stage.progress}%</span>
+                                                            </div>
+                                                            <div className="relative w-full h-4 flex items-center">
+                                                                <div className="absolute inset-0 bg-stone-100 rounded-full h-1.5 top-1/2 -translate-y-1/2 border border-stone-200 overflow-hidden">
+                                                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${stage.progress}%` }}></div>
+                                                                </div>
+                                                                {isAdmin && (
                                                                     <input
-                                                                        type="number"
+                                                                        type="range"
                                                                         min="0"
                                                                         max="100"
+                                                                        step="1"
                                                                         value={stage.progress}
                                                                         onChange={(e) => handleStageProgressChange(idx, e.target.value)}
-                                                                        className="w-10 text-center bg-white border border-stone-200 rounded px-1 py-0.5 text-[9px] font-black text-emerald-700 section-focus outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
+                                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                                                     />
-                                                                </div>
-                                                            ) : (
-                                                                <div className="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden border border-stone-200">
-                                                                    <div
-                                                                        className={`h-full rounded-full ${isOverBudget ? 'bg-red-400' : 'bg-emerald-400'}`}
-                                                                        style={{ width: `${Math.min(stage.progress, 100)}%` }}
-                                                                    ></div>
-                                                                </div>
-                                                            )}
+                                                                )}
+                                                                <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-emerald-600 rounded-full shadow-md pointer-events-none transition-all hidden group-hover/slider:block" style={{ left: `calc(${stage.progress}% - 6px)` }}></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-2 px-3">
+                                                        <div className="flex flex-col gap-1 items-center">
+                                                            <span className="text-[9px] font-bold text-stone-500">{stage.financialProgress?.toFixed(1)}%</span>
+                                                            <div className="w-full bg-stone-100 rounded-full h-1 border border-stone-200 overflow-hidden">
+                                                                <div className={`h-full rounded-full transition-all duration-500 ${isOverBudget ? 'bg-red-400' : 'bg-blue-400'}`} style={{ width: `${stage.financialProgress}%` }}></div>
+                                                            </div>
                                                         </div>
                                                     </td>
                                                 </tr>
