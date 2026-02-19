@@ -22,6 +22,7 @@
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "recharts": "^2.15.4",
     "serve": "^14.2.1",
     "tailwind-merge": "^2.2.1"
   },
