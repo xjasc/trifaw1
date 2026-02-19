@@ -61,7 +61,7 @@ interface ProjectDetailsProps {
 const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], suppliers = [], onUpdateProject, currentUser, globalExpenses = [] }) => {
     if (!project) return null;
 
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'despesas' | 'measurements' | 'documentation' | 'photos'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'despesas' | 'admin-expenses' | 'measurements' | 'documentation' | 'photos'>('dashboard');
     const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
 
     const toggleStageExpansion = (stageName: string) => {
@@ -838,19 +838,22 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                                 </tr>
                                                                             </thead>
                                                                             <tbody className="divide-y divide-stone-100">
-                                                                                {(project.expenses || []).filter(e => e.stageId === stage.name).length === 0 ? (
+                                                                                {[...(project.expenses || []), ...(globalExpenses || []).filter(ge => ge.projectId === project.id)].filter(e => e.stageId === stage.name).length === 0 ? (
                                                                                     <tr>
                                                                                         <td colSpan={4} className="py-4 text-center text-[9px] font-bold text-stone-400 italic">Nenhuma despesa vinculada a esta etapa.</td>
                                                                                     </tr>
                                                                                 ) : (
-                                                                                    (project.expenses || []).filter(e => e.stageId === stage.name).map((exp, eidx) => (
-                                                                                        <tr key={eidx} className="text-[9px] hover:bg-stone-50 transition-colors">
-                                                                                            <td className="py-2 px-3 text-stone-500">{new Date(exp.date).toLocaleDateString('pt-BR')}</td>
-                                                                                            <td className="py-2 px-3 font-bold text-stone-700">{exp.description}</td>
-                                                                                            <td className="py-2 px-3 text-stone-500 font-bold">{exp.supplier}</td>
-                                                                                            <td className="py-2 px-3 text-right font-black text-emerald-800">{formatBRL(exp.amount)}</td>
-                                                                                        </tr>
-                                                                                    ))
+                                                                                    [...(project.expenses || []), ...(globalExpenses || []).filter(ge => ge.projectId === project.id)]
+                                                                                        .filter(e => e.stageId === stage.name)
+                                                                                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                                                                        .map((exp, eidx) => (
+                                                                                            <tr key={eidx} className="text-[9px] hover:bg-stone-50 transition-colors">
+                                                                                                <td className="py-2 px-3 text-stone-500">{new Date(exp.date).toLocaleDateString('pt-BR')}</td>
+                                                                                                <td className="py-2 px-3 font-bold text-stone-700">{exp.description}</td>
+                                                                                                <td className="py-2 px-3 text-stone-500 font-bold">{exp.supplier}</td>
+                                                                                                <td className="py-2 px-3 text-right font-black text-emerald-700">{formatBRL(exp.amount)}</td>
+                                                                                            </tr>
+                                                                                        ))
                                                                                 )}
                                                                             </tbody>
                                                                         </table>
@@ -884,9 +887,9 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
             {/* TABS NAVEGAÇÃO */}
             <div className="sticky top-2 z-40">
                 <div className="relative bg-[#e6e4e0]/95 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-stone-300 flex overflow-x-auto gap-2 items-center justify-center no-scrollbar">
-                    {(isAdmin ? ['dashboard', 'despesas', 'measurements', 'documentation', 'photos'] : ['photos', 'documentation']).map((tab: any) => (
+                    {(isAdmin ? ['dashboard', 'despesas', 'admin-expenses', 'measurements', 'documentation', 'photos'] : ['photos', 'documentation']).map((tab: any) => (
                         <button key={tab} onClick={() => { setActiveTab(tab); setFilterMonth('ALL'); }} className={`flex-none py-2.5 px-6 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === tab ? 'bg-emerald-950 text-white shadow-md' : 'text-stone-500 hover:text-emerald-900 hover:bg-white/50'}`}>
-                            {tab === 'dashboard' ? 'Financeiro' : tab === 'despesas' ? 'Despesas' : tab === 'measurements' ? 'Faturamento' : tab === 'documentation' ? 'Documentos' : 'Relatório Fotográfico'}
+                            {tab === 'dashboard' ? 'Financeiro' : tab === 'despesas' ? 'Despesas' : tab === 'admin-expenses' ? 'Despesas Adm' : tab === 'measurements' ? 'Faturamento' : tab === 'documentation' ? 'Documentos' : 'Relatório Fotográfico'}
                         </button>
                     ))}
                 </div>
@@ -1448,7 +1451,18 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                     )
                 }
 
-
+                {activeTab === 'admin-expenses' && isAdmin && (
+                    <div className="max-w-6xl mx-auto animate-in fade-in duration-500">
+                        <AdminExpenses
+                            expenses={globalExpenses.filter(e => e.projectId === project.id)}
+                            projects={[]}
+                            onSaveExpense={async (expense: Expense) => { await api.saveAdminExpense({ ...expense, projectId: project.id }); }}
+                            onDeleteExpense={async (id: string) => { await api.deleteAdminExpense(id); }}
+                            currentUser={currentUser}
+                            suppliers={suppliers}
+                        />
+                    </div>
+                )}
             </div >
 
             {/* MODAL DE EDIÇÃO DE ANEXO (LEGENDA) */}
