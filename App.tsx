@@ -214,10 +214,11 @@ const App: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10">
           {currentView === 'dashboard' && isAdmin && (
             <Dashboard
-              projects={visibleProjects}
+              projects={data.projects}
+              adminExpenses={data.adminExpenses}
               navigateToProject={(id: string) => navigateTo('project-details', id)}
-              navigateToProjectsList={() => navigateTo('projects')}
-              userRole={data.currentUser.role}
+              navigateToProjectsList={() => setCurrentView('projects')}
+              userRole={data.currentUser?.role as UserRole}
             />
           )}
           {currentView === 'projects' && (

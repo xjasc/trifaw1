@@ -307,22 +307,30 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
 
     const handleStageWeightChange = (index: number, newWeight: string) => {
         let weight = parseFloat(newWeight.replace(',', '.'));
-        if (isNaN(weight)) return;
+        if (isNaN(weight)) weight = 0;
 
-        const updatedStages = [...localStages];
-        const expectedCost = (project.budget || 0) * (weight / 100);
-        updatedStages[index] = { ...updatedStages[index], weight, expectedCost };
-        setLocalStages(updatedStages);
+        const newStages = [...localStages];
+        newStages[index] = {
+            ...newStages[index],
+            weight,
+            expectedCost: (weight / 100) * project.budget
+        };
+        setLocalStages(newStages);
     };
 
     const handleStageExpectedCostChange = (index: number, newCost: string) => {
-        let expectedCost = parseFloat(newCost.replace(',', '.'));
-        if (isNaN(expectedCost)) return;
+        let cost = parseFloat(newCost.replace(',', '.'));
+        if (isNaN(cost)) cost = 0;
 
-        const updatedStages = [...localStages];
-        const weight = project.budget > 0 ? (expectedCost / project.budget) * 100 : 0;
-        updatedStages[index] = { ...updatedStages[index], expectedCost, weight };
-        setLocalStages(updatedStages);
+        const newStages = [...localStages];
+        const newWeight = project.budget > 0 ? (cost / project.budget) * 100 : 0;
+
+        newStages[index] = {
+            ...newStages[index],
+            expectedCost: cost,
+            weight: newWeight
+        };
+        setLocalStages(newStages);
     };
 
     const handleStageProgressChange = (index: number, newProgress: string) => {
@@ -735,10 +743,12 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                         <tr className="border-b border-stone-200">
                                             <th className="w-10"></th>
                                             <th className="text-left py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider">Etapa</th>
-                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Peso (%)</th>
-                                            <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-32">Custo Previsto</th>
-                                            <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-32">Custo Real</th>
-                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-32">Avanço</th>
+                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-16">Peso (%)</th>
+                                            <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-24">Custo Esp.</th>
+                                            <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-24">Custo Real</th>
+                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-16">Saldo</th>
+                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-32">Av. Finan</th>
+                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-24">Av. Físico</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-stone-50">
@@ -770,10 +780,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                     max="100"
                                                                     value={stage.weight}
                                                                     onChange={(e) => handleStageWeightChange(idx, e.target.value)}
-                                                                    className="w-16 text-center bg-white border border-stone-200 rounded px-1 py-1 text-[10px] font-black text-stone-700 focus:border-emerald-500 outline-none"
+                                                                    className="w-12 text-center bg-white border border-stone-200 rounded px-1 py-1 text-[9px] font-black text-stone-700 focus:border-emerald-500 outline-none"
                                                                 />
                                                             ) : (
-                                                                <span className="text-[10px] font-black text-stone-500">{stage.weight.toFixed(2)}%</span>
+                                                                <span className="text-[9px] font-black text-stone-500">{stage.weight.toFixed(1)}%</span>
                                                             )}
                                                         </td>
                                                         <td className="py-2 px-3 text-right">
@@ -783,38 +793,55 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                     step="0.01"
                                                                     value={stage.expectedCost}
                                                                     onChange={(e) => handleStageExpectedCostChange(idx, e.target.value)}
-                                                                    className="w-24 text-right bg-white border border-stone-200 rounded px-1 py-1 text-[10px] font-black text-stone-700 focus:border-emerald-500 outline-none"
+                                                                    className="w-20 text-right bg-white border border-stone-200 rounded px-1 py-1 text-[9px] font-black text-stone-700 focus:border-emerald-500 outline-none"
                                                                 />
                                                             ) : (
-                                                                <span className="text-[10px] font-black text-stone-600 font-mono">{formatBRL(stage.expectedCost)}</span>
+                                                                <span className="text-[9px] font-black text-stone-600 font-mono">{formatBRL(stage.expectedCost)}</span>
                                                             )}
                                                         </td>
                                                         <td className="py-2 px-3 text-right">
-                                                            <span className={`text-[10px] font-black font-mono ${isOverBudget ? 'text-red-600' : 'text-emerald-700'}`}>
+                                                            <span className={`text-[9px] font-black font-mono ${isOverBudget ? 'text-red-600' : 'text-emerald-700'}`}>
                                                                 {formatBRL(stage.realCost)}
                                                             </span>
                                                         </td>
+                                                        <td className="py-2 px-3 text-center">
+                                                            <div className={`text-[8px] font-black px-1.5 py-0.5 rounded-full inline-flex items-center gap-1 ${isOverBudget ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                                                                <i className={`fa-solid fa-circle-${isOverBudget ? 'minus' : 'plus'}`}></i>
+                                                                {isOverBudget ? '-' : '+'}
+                                                            </div>
+                                                        </td>
                                                         <td className="py-2 px-3">
-                                                            <div className="flex items-center gap-2 justify-center">
+                                                            {/* Barra Financeira (Automática) */}
+                                                            <div className="flex flex-col gap-0.5 w-full">
+                                                                <div className="flex justify-between items-center text-[7px] font-black uppercase text-stone-400">
+                                                                    <span>Finan.</span>
+                                                                    <span className={stage.financialProgress > 100 ? 'text-red-600' : 'text-emerald-600'}>{stage.financialProgress.toFixed(0)}%</span>
+                                                                </div>
+                                                                <div className="h-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
+                                                                    <div className={`h-full transition-all duration-500 ${stage.financialProgress > 100 ? 'bg-red-500' : 'bg-emerald-600'}`} style={{ width: `${Math.min(stage.financialProgress, 100)}%` }}></div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-2 px-3">
+                                                            {/* Barra Física (Manual) */}
+                                                            <div className="flex flex-col gap-0.5 w-full">
+                                                                <div className="flex justify-between items-center text-[7px] font-black uppercase text-stone-400">
+                                                                    <span>Fis.</span>
+                                                                    <span className="text-stone-700">{stage.progress.toFixed(0)}%</span>
+                                                                </div>
                                                                 {isAdmin ? (
-                                                                    <div className="relative group w-full">
-                                                                        <input
-                                                                            type="number"
-                                                                            min="0"
-                                                                            max="100"
-                                                                            step="1"
-                                                                            value={stage.progress}
-                                                                            onChange={(e) => handleStageProgressChange(idx, e.target.value)}
-                                                                            className="w-16 text-center bg-white border border-stone-200 rounded px-1 py-1 text-[10px] font-black text-emerald-700 focus:border-emerald-500 outline-none"
-                                                                        />
-                                                                        <span className="absolute -right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-emerald-800">%</span>
-                                                                    </div>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        max="100"
+                                                                        step="1"
+                                                                        value={stage.progress}
+                                                                        onChange={(e) => handleStageProgressChange(idx, e.target.value)}
+                                                                        className="w-full text-center bg-white border border-stone-200 rounded px-1 py-0.5 text-[9px] font-black text-stone-700 focus:border-emerald-500 outline-none"
+                                                                    />
                                                                 ) : (
-                                                                    <div className="flex items-center gap-2 w-full">
-                                                                        <div className="flex-1 bg-stone-100 rounded-full h-1 border border-stone-200 overflow-hidden">
-                                                                            <div className="h-full bg-emerald-500" style={{ width: `${stage.progress}%` }}></div>
-                                                                        </div>
-                                                                        <span className="text-[10px] font-black text-emerald-900">{stage.progress}%</span>
+                                                                    <div className="h-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
+                                                                        <div className="h-full bg-stone-700 transition-all duration-500" style={{ width: `${stage.progress}%` }}></div>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -822,7 +849,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                     </tr>
                                                     {expandedStages.has(stage.name) && (
                                                         <tr>
-                                                            <td colSpan={6} className="bg-stone-50/50 p-0">
+                                                            <td colSpan={8} className="bg-stone-50/50 p-0">
                                                                 <div className="px-10 py-4 border-l-2 border-emerald-500 ml-5 animate-in slide-in-from-left-2 transition-all">
                                                                     <h5 className="text-[8px] font-black text-emerald-800 uppercase tracking-widest mb-3 flex items-center gap-2">
                                                                         <i className="fa-solid fa-list-check"></i> Detalhamento de Despesas - {stage.name}
