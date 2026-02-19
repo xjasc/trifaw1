@@ -306,16 +306,14 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
     }, [localStages, project.expenses, globalExpenses, project.id]);
 
     const handleStageWeightChange = (index: number, newWeight: string) => {
-        let weight = parseFloat(newWeight.replace(',', '.'));
-        if (isNaN(weight)) weight = 0;
+        const val = parseFloat(newWeight) || 0;
+        const updated = [...localStages];
+        updated[index].weight = val;
 
-        const newStages = [...localStages];
-        newStages[index] = {
-            ...newStages[index],
-            weight,
-            expectedCost: (weight / 100) * project.budget
-        };
-        setLocalStages(newStages);
+        // AUTO-DISTRIBUTE EXPECTED COST: weight % of total budget
+        updated[index].expectedCost = (val / 100) * (project.budget || 0);
+
+        setLocalStages(updated);
     };
 
     const handleStageExpectedCostChange = (index: number, newCost: string) => {
@@ -741,14 +739,14 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                 <table className="w-full">
                                     <thead className="bg-stone-50">
                                         <tr className="border-b border-stone-200">
-                                            <th className="w-10"></th>
-                                            <th className="text-left py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider">Etapa</th>
-                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-16">Peso (%)</th>
-                                            <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-24">Custo Esp.</th>
-                                            <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-24">Custo Real</th>
-                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-16">Saldo</th>
-                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-32">Av. Finan</th>
-                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-24">Av. Físico</th>
+                                            <th className="w-8"></th>
+                                            <th className="text-left py-2 px-1 text-[8px] font-black uppercase text-stone-400 tracking-wider">Etapa</th>
+                                            <th className="text-center py-2 px-1 text-[8px] font-black uppercase text-stone-400 tracking-wider w-14">Peso (%)</th>
+                                            <th className="text-right py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Custo Esp.</th>
+                                            <th className="text-right py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Custo Real</th>
+                                            <th className="text-center py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Saldo</th>
+                                            <th className="text-center py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-28">Av. Finan</th>
+                                            <th className="text-center py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-28">Av. Físico</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-stone-50">
@@ -765,10 +763,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                 <i className={`fa-solid fa-chevron-${expandedStages.has(stage.name) ? 'up' : 'down'} text-[8px]`}></i>
                                                             </button>
                                                         </td>
-                                                        <td className="py-2 px-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-[8px] font-bold text-stone-300 w-4">{idx + 1}</span>
-                                                                <span className="text-[10px] font-black uppercase text-stone-700 tracking-tight">{stage.name}</span>
+                                                        <td className="py-2 px-1">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-[8px] font-bold text-stone-300 w-3">{idx + 1}</span>
+                                                                <span className="text-[10px] font-black uppercase text-stone-700 tracking-tight leading-none">{stage.name}</span>
                                                             </div>
                                                         </td>
                                                         <td className="py-2 px-3 text-center">
@@ -804,10 +802,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                 {formatBRL(stage.realCost)}
                                                             </span>
                                                         </td>
-                                                        <td className="py-2 px-3 text-center">
-                                                            <div className={`text-[8px] font-black px-1.5 py-0.5 rounded-full inline-flex items-center gap-1 ${isOverBudget ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
-                                                                <i className={`fa-solid fa-circle-${isOverBudget ? 'minus' : 'plus'}`}></i>
-                                                                {isOverBudget ? '-' : '+'}
+                                                        <td className="py-2 px-2 text-center">
+                                                            <div className={`text-[10px] font-black px-2 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-sm border ${isOverBudget ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
+                                                                <i className={`fa-solid fa-${isOverBudget ? 'triangle-exclamation' : 'circle-check'} text-[9px]`}></i>
+                                                                <span className="tracking-tighter">{isOverBudget ? '-' : '+'}</span>
                                                             </div>
                                                         </td>
                                                         <td className="py-2 px-3">
@@ -822,27 +820,26 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td className="py-2 px-3">
-                                                            {/* Barra Física (Manual) */}
+                                                        <td className="py-2 px-2">
+                                                            {/* Barra Física (Manual) - AZUL */}
                                                             <div className="flex flex-col gap-0.5 w-full">
                                                                 <div className="flex justify-between items-center text-[7px] font-black uppercase text-stone-400">
                                                                     <span>Fis.</span>
-                                                                    <span className="text-stone-700">{stage.progress.toFixed(2)}%</span>
+                                                                    <span className="text-blue-700">{stage.progress.toFixed(2)}%</span>
                                                                 </div>
-                                                                {isAdmin ? (
+                                                                <div className="h-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
+                                                                    <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${Math.min(stage.progress, 100)}%` }}></div>
+                                                                </div>
+                                                                {isAdmin && (
                                                                     <input
-                                                                        type="number"
+                                                                        type="range"
                                                                         min="0"
                                                                         max="100"
                                                                         step="1"
                                                                         value={stage.progress}
                                                                         onChange={(e) => handleStageProgressChange(idx, e.target.value)}
-                                                                        className="w-full text-center bg-white border border-stone-200 rounded px-1 py-0.5 text-[9px] font-black text-stone-700 focus:border-emerald-500 outline-none"
+                                                                        className="w-full h-1 mt-1 cursor-pointer accent-blue-600"
                                                                     />
-                                                                ) : (
-                                                                    <div className="h-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
-                                                                        <div className="h-full bg-stone-700 transition-all duration-500" style={{ width: `${stage.progress}%` }}></div>
-                                                                    </div>
                                                                 )}
                                                             </div>
                                                         </td>

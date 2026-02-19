@@ -13,8 +13,8 @@ interface AdminExpensesProps {
 
 const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects = [], onSaveExpense, onDeleteExpense, currentUser, suppliers = [] }) => {
     const [showModal, setShowModal] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [filterMonth, setFilterMonth] = useState<string>('ALL');
-    // Removed unused isDownloading state
 
     // Form State
     const [formData, setFormData] = useState({
@@ -62,6 +62,32 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
 
     const formatBRL = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
+    const handleOpenModal = (expense?: Expense) => {
+        if (expense) {
+            setEditingId(expense.id);
+            setFormData({
+                description: expense.description || '',
+                amount: expense.amount || 0,
+                category: expense.category || CATEGORIES[0].id,
+                supplier: expense.supplier || '',
+                status: expense.status || ExpenseStatus.REALIZED,
+                date: expense.date || new Date().toISOString().split('T')[0],
+                attachmentUrl: expense.attachmentUrl || '',
+                stageId: expense.stageId || '',
+                projectId: expense.projectId || ''
+            });
+        } else {
+            setEditingId(null);
+            setFormData({
+                description: '', amount: 0, category: CATEGORIES[0].id, supplier: '',
+                status: ExpenseStatus.REALIZED, date: new Date().toISOString().split('T')[0], attachmentUrl: '',
+                stageId: '', projectId: ''
+            });
+        }
+        setExpenseFile(null);
+        setShowModal(true);
+    };
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -77,23 +103,18 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
             });
         }
 
-        const newExpense: Expense = {
-            id: `admin-e-${Date.now()}`,
+        const expenseToSave: Expense = {
+            id: editingId || `admin-e-${Date.now()}`,
             ...formData,
             amount: Number(formData.amount),
             attachmentUrl,
             createdBy: currentUser.id,
-            projectId: formData.projectId || 'ADMIN' // Se não houver projeto, é administrativo puro
+            projectId: formData.projectId || 'ADMIN'
         };
 
-        await onSaveExpense(newExpense);
+        await onSaveExpense(expenseToSave);
         setShowModal(false);
-        setFormData({
-            description: '', amount: 0, category: CATEGORIES[0].id, supplier: '',
-            status: ExpenseStatus.REALIZED, date: new Date().toISOString().split('T')[0], attachmentUrl: '',
-            stageId: '', projectId: ''
-        });
-        setExpenseFile(null);
+        setEditingId(null);
     };
 
     const handleDelete = async (id: string) => {
@@ -101,6 +122,22 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
             await onDeleteExpense(id);
         }
     };
+
+    // Reusable Classes (Standardized with ProjectDetails)
+    const modalContainerClass = "fixed inset-0 z-[9999] flex items-center justify-center md:p-4 font-inter";
+    const modalBackdropClass = "absolute inset-0 bg-stone-900/95 backdrop-blur-sm transition-opacity";
+    const modalContentClass = "relative w-full h-full md:h-auto md:max-h-[85vh] md:max-w-2xl bg-emerald-950 md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-300";
+    const modalHeaderClass = "relative z-10 shrink-0 py-5 px-6 md:px-8 border-b border-white/10 flex justify-between items-center bg-black/20 backdrop-blur-sm";
+    const inputClass = "w-full p-3.5 bg-stone-100 border border-stone-300 rounded-xl font-bold text-stone-800 text-xs outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-stone-400";
+    const selectClass = "w-full p-3.5 bg-stone-100 border border-stone-300 rounded-xl font-bold text-stone-800 text-xs outline-none focus:border-emerald-500 focus:bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500/20";
+    const labelClass = "text-[9px] font-black uppercase text-emerald-200 tracking-widest ml-1 mb-1.5 block drop-shadow-sm";
+
+    const ModalBackground = () => (
+        <div className="absolute inset-0 z-0 pointer-events-none">
+            <div className="absolute inset-0 bg-cover bg-center opacity-30 grayscale-[20%]" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&q=80&w=2070')` }}></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/95 via-emerald-950/90 to-emerald-950/95 mix-blend-multiply"></div>
+        </div>
+    );
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-12">
@@ -111,7 +148,7 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
                     <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">Gestão de Custos da Empresa (Não Vinculados a Projetos)</p>
                 </div>
                 <button
-                    onClick={() => setShowModal(true)}
+                    onClick={() => handleOpenModal()}
                     className="bg-emerald-950 text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-900 transition-all shadow-lg flex items-center gap-2"
                 >
                     <i className="fa-solid fa-plus"></i> Nova Despesa
@@ -207,6 +244,9 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
                                                 <i className="fa-solid fa-download text-xs"></i>
                                             </a>
                                         )}
+                                        <button onClick={() => handleOpenModal(expense)} className="w-8 h-8 rounded-lg bg-stone-100 text-stone-400 hover:bg-emerald-100 hover:text-emerald-700 transition-all flex items-center justify-center">
+                                            <i className="fa-solid fa-pen text-[10px]"></i>
+                                        </button>
                                         <button onClick={() => handleDelete(expense.id)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors">
                                             <i className="fa-solid fa-trash text-xs"></i>
                                         </button>
@@ -225,87 +265,121 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
                 </div>
             </div>
 
-            {/* MODAL NOVA DESPESA */}
+            {/* MODAL PADRONIZADO */}
             {showModal && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/80 backdrop-blur-sm">
-                    <div className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-                        <div className="px-8 py-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
-                            <h3 className="text-lg font-black text-stone-800 uppercase italic">Nova Despesa Administrativa</h3>
-                            <button onClick={() => setShowModal(false)} className="text-stone-400 hover:text-stone-600"><i className="fa-solid fa-xmark text-xl"></i></button>
-                        </div>
-                        <form onSubmit={handleSave} className="p-8 space-y-4">
+                <div className={modalContainerClass}>
+                    <div className={modalBackdropClass} onClick={() => setShowModal(false)}></div>
+                    <div className={modalContentClass}>
+                        <ModalBackground />
+                        <div className={modalHeaderClass}>
                             <div>
-                                <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Descrição</label>
-                                <input required type="text" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all" placeholder="Ex: Conta de Luz" />
+                                <h3 className="text-xl md:text-2xl font-black text-white uppercase italic tracking-tight drop-shadow-md">
+                                    {editingId ? 'Editar Despesa' : 'Nova Despesa Administrativa'}
+                                </h3>
+                                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest drop-shadow-md mt-1">Custo de Operação Central</p>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Valor (R$)</label>
-                                    <input required type="number" step="0.01" value={formData.amount} onChange={e => setFormData({ ...formData, amount: parseFloat(e.target.value) })} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all" />
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Data</label>
-                                    <input required type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all" />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Categoria</label>
-                                    <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all">
-                                        {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Status</label>
-                                    <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as ExpenseStatus })} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all">
-                                        <option value={ExpenseStatus.REALIZED}>Paga / Realizada</option>
-                                        <option value={ExpenseStatus.FUTURE}>A Pagar / Futura</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Projeto (Opcional)</label>
-                                    <select
-                                        value={formData.projectId}
-                                        onChange={e => setFormData({ ...formData, projectId: e.target.value, stageId: '' })}
-                                        className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all font-saira"
-                                    >
-                                        <option value="">Despesa Administrativa</option>
-                                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Etapa</label>
-                                    <select
-                                        disabled={!formData.projectId}
-                                        value={formData.stageId}
-                                        onChange={e => setFormData({ ...formData, stageId: e.target.value })}
-                                        className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all font-saira disabled:opacity-50"
-                                    >
-                                        <option value="">Geral / Sem Etapa</option>
-                                        {formData.projectId && projects.find(p => p.id === formData.projectId)?.stages?.map((s: any) => (
-                                            <option key={s.name} value={s.name}>{s.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Fornecedor</label>
-                                <input list="suppliers-list" value={formData.supplier} onChange={e => setFormData({ ...formData, supplier: e.target.value })} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all" placeholder="Digite ou selecione..." />
-                                <datalist id="suppliers-list">
-                                    {suppliers.map(s => <option key={s.id} value={s.name} />)}
-                                </datalist>
-                            </div>
-                            <div>
-                                <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Comprovante / Anexo</label>
-                                <input type="file" onChange={e => setExpenseFile(e.target.files?.[0] || null)} className="w-full p-2 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-500 text-xs outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200" />
-                            </div>
-
-                            <button type="submit" className="w-full py-4 mt-4 bg-emerald-950 text-white rounded-xl font-black uppercase tracking-widest hover:bg-emerald-900 transition-all shadow-lg active:scale-95">
-                                Salvar Despesa
+                            <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/5 text-emerald-200 hover:bg-white/20 transition-colors">
+                                <i className="fa-solid fa-xmark text-lg"></i>
                             </button>
-                        </form>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
+                            <form onSubmit={handleSave} className="space-y-5">
+                                <div>
+                                    <label className={labelClass}>Descrição da Despesa</label>
+                                    <input required type="text" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className={inputClass} placeholder="Ex: Conta de Luz, Aluguel..." />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClass}>Valor (R$)</label>
+                                        <input required type="number" step="0.01" value={formData.amount} onChange={e => setFormData({ ...formData, amount: parseFloat(e.target.value) })} className={inputClass} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Data do Registro</label>
+                                        <input required type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className={inputClass} />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="relative">
+                                        <label className={labelClass}>Categoria</label>
+                                        <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className={selectClass}>
+                                            {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                                        </select>
+                                        <div className="absolute right-4 bottom-3.5 pointer-events-none text-stone-400"><i className="fa-solid fa-chevron-down text-[10px]"></i></div>
+                                    </div>
+                                    <div className="relative">
+                                        <label className={labelClass}>Status do Pagamento</label>
+                                        <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as ExpenseStatus })} className={selectClass}>
+                                            <option value={ExpenseStatus.REALIZED}>Paga / Realizada</option>
+                                            <option value={ExpenseStatus.FUTURE}>A Pagar / Futura</option>
+                                        </select>
+                                        <div className="absolute right-4 bottom-3.5 pointer-events-none text-stone-400"><i className="fa-solid fa-chevron-down text-[10px]"></i></div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="relative">
+                                        <label className={labelClass}>Vincular a Projeto (Opcional)</label>
+                                        <select
+                                            value={formData.projectId}
+                                            onChange={e => setFormData({ ...formData, projectId: e.target.value, stageId: '' })}
+                                            className={selectClass}
+                                        >
+                                            <option value="">Apenas Administrativa</option>
+                                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        </select>
+                                        <div className="absolute right-4 bottom-3.5 pointer-events-none text-stone-400"><i className="fa-solid fa-chevron-down text-[10px]"></i></div>
+                                    </div>
+                                    <div className="relative">
+                                        <label className={labelClass}>Etapa do Projeto</label>
+                                        <select
+                                            disabled={!formData.projectId}
+                                            value={formData.stageId}
+                                            onChange={e => setFormData({ ...formData, stageId: e.target.value })}
+                                            className={`${selectClass} disabled:opacity-50`}
+                                        >
+                                            <option value="">Geral / Sem Etapa</option>
+                                            {formData.projectId && projects.find(p => p.id === formData.projectId)?.stages?.map((s: any) => (
+                                                <option key={s.name} value={s.name}>{s.name}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-4 bottom-3.5 pointer-events-none text-stone-400"><i className="fa-solid fa-chevron-down text-[10px]"></i></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className={labelClass}>Fornecedor / Beneficiário</label>
+                                    <input list="admin-suppliers-list" value={formData.supplier} onChange={e => setFormData({ ...formData, supplier: e.target.value })} className={inputClass} placeholder="Digite ou selecione..." />
+                                    <datalist id="admin-suppliers-list">
+                                        {suppliers.map(s => <option key={s.id} value={s.name} />)}
+                                    </datalist>
+                                </div>
+
+                                <div>
+                                    <label className={labelClass}>Comprovante / Anexo</label>
+                                    <div className="relative group">
+                                        <input type="file" onChange={e => setExpenseFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                        <div className="w-full p-4 bg-white/5 border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center gap-3 group-hover:bg-white/10 group-hover:border-emerald-500/50 transition-all">
+                                            <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                                                <i className="fa-solid fa-cloud-arrow-up"></i>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-xs font-black text-white uppercase tracking-wider">{expenseFile ? expenseFile.name : 'Clique para selecionar'}</p>
+                                                <p className="text-[9px] font-bold text-emerald-300/50 uppercase tracking-widest mt-1">PDF, JPG, PNG (MÁX 5MB)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 flex gap-3">
+                                    <button type="submit" className="flex-1 py-4 bg-emerald-500 text-emerald-950 rounded-2xl font-black uppercase tracking-widest hover:bg-emerald-400 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-emerald-950/20">
+                                        {editingId ? 'Salvar Alterações' : 'Confirmar Registro'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}
