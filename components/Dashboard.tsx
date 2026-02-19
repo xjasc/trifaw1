@@ -1,6 +1,9 @@
-
 import React, { useMemo } from 'react';
 import { Project, ExpenseStatus, ProjectStatus, UserRole } from '../types';
+import { CATEGORIES } from '../constants';
+import {
+  PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend
+} from 'recharts';
 
 interface DashboardProps {
   projects: Project[];
@@ -9,6 +12,8 @@ interface DashboardProps {
   navigateToProjectsList: () => void;
   userRole: UserRole;
 }
+
+const CHART_COLORS = ['#064e3b', '#065f46', '#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
 
 const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = [], navigateToProject }) => {
 
@@ -22,11 +27,34 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
     let totalExpensesActive = 0;
     let totalMeasurementsActive = 0;
 
+    // Agregadores para gráficos
+    const categoryTotals: Record<string, number> = {};
+    const supplierTotals: Record<string, number> = {};
+
+    const processExpense = (e: any) => {
+      if (e.status === ExpenseStatus.REALIZED) {
+        const amount = Number(e.amount) || 0;
+
+        // Categoria
+        const cat = e.category || 'OUTROS';
+        categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
+
+        // Fornecedor
+        if (e.supplier) {
+          const sup = e.supplier.toUpperCase().trim();
+          supplierTotals[sup] = (supplierTotals[sup] || 0) + amount;
+        }
+      }
+    };
+
     // Processamento detalhado para a Tabela e KPIs (Focados em Projetos Ativos para financeiro)
     const detailedProjects = activeProjects.map(p => {
       const pBudget = Number(p.budget) || 0;
 
-      // Somar Despesas Realizadas deste projeto
+      // Processar todas as despesas do projeto para os gráficos
+      (p.expenses || []).forEach(processExpense);
+
+      // Somar Despesas Realizadas deste projeto para KPI
       const pExpenses = (p.expenses || [])
         .filter(e => e.status === ExpenseStatus.REALIZED)
         .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -55,13 +83,26 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
       };
     });
 
-    // Somar Despesas Administrativas Realizadas que não estão vinculadas a projeto
-    // Ou todas as administrativas (opcional, dependendo da regra de negócio - aqui vamos somar todas as realizadas para contagem geral)
+    // Somar Despesas Administrativas Realizadas
+    adminExpenses.forEach(processExpense);
     const totalAdminExpenses = adminExpenses
       .filter(e => e.status === ExpenseStatus.REALIZED)
       .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
     totalExpensesActive += totalAdminExpenses;
+
+    // Formatar dados para recharts
+    const categoryData = Object.entries(categoryTotals)
+      .map(([id, value]) => ({
+        name: CATEGORIES.find(c => c.id === id)?.label || id,
+        value
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    const supplierData = Object.entries(supplierTotals)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5); // Top 5 fornecedores
 
     // Ordenar projetos por Budget (do maior para o menor) para a tabela
     detailedProjects.sort((a, b) => b.stats.budget - a.stats.budget);
@@ -76,9 +117,11 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
       totalExpensesActive,
       totalMeasurementsActive,
       contractualBalance,
-      detailedProjects
+      detailedProjects,
+      categoryData,
+      supplierData
     };
-  }, [projects]);
+  }, [projects, adminExpenses]);
 
   const formatBRL = (val: number) => new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -179,6 +222,68 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
           </div>
         </div>
 
+      </div>
+
+      {/* SEÇÃO 2: Analíticos (Novos Gráficos) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico de Categorias */}
+        <div className="bg-[#fafaf9] p-6 rounded-[2.5rem] border border-[#e7e5e4] shadow-sm overflow-hidden min-h-[400px]">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-emerald-950 text-white flex items-center justify-center shadow-md">
+              <i className="fa-solid fa-chart-pie"></i>
+            </div>
+            <h3 className="text-xs font-black text-stone-700 uppercase tracking-widest italic">Custo por Categoria</h3>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={stats.categoryData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {stats.categoryData.map((_entry, index) => (
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value?: any) => formatBRL(Number(value) || 0)}
+                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+                <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', paddingTop: '20px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Gráfico de Fornecedores */}
+        <div className="bg-[#fafaf9] p-6 rounded-[2.5rem] border border-[#e7e5e4] shadow-sm overflow-hidden min-h-[400px]">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-emerald-950 text-white flex items-center justify-center shadow-md">
+              <i className="fa-solid fa-truck-field"></i>
+            </div>
+            <h3 className="text-xs font-black text-stone-700 uppercase tracking-widest italic">Top 5 Fornecedores</h3>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.supplierData} layout="vertical" margin={{ left: 10, right: 30, top: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 9, fontWeight: 'bold', fill: '#4b5563' }} />
+                <Tooltip
+                  formatter={(value?: any) => formatBRL(Number(value) || 0)}
+                  cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="value" fill="#064e3b" radius={[0, 10, 10, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       {/* SEÇÃO 3: Lista Detalhada de Projetos Ativos */}

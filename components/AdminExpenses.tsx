@@ -128,8 +128,8 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
     const modalBackdropClass = "absolute inset-0 bg-stone-900/95 backdrop-blur-sm transition-opacity";
     const modalContentClass = "relative w-full h-full md:h-auto md:max-h-[85vh] md:max-w-2xl bg-emerald-950 md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-300";
     const modalHeaderClass = "relative z-10 shrink-0 py-5 px-6 md:px-8 border-b border-white/10 flex justify-between items-center bg-black/20 backdrop-blur-sm";
-    const inputClass = "w-full p-3.5 bg-stone-100 border border-stone-300 rounded-xl font-bold text-stone-800 text-xs outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-stone-400";
-    const selectClass = "w-full p-3.5 bg-stone-100 border border-stone-300 rounded-xl font-bold text-stone-800 text-xs outline-none focus:border-emerald-500 focus:bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500/20";
+    const inputClass = "w-full p-3.5 bg-white border border-stone-300 rounded-xl font-bold text-stone-800 text-xs outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-stone-400";
+    const selectClass = "w-full p-3.5 bg-white border border-stone-300 rounded-xl font-bold text-stone-800 text-xs outline-none focus:border-emerald-500 focus:bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500/20";
     const labelClass = "text-[9px] font-black uppercase text-emerald-200 tracking-widest ml-1 mb-1.5 block drop-shadow-sm";
 
     const ModalBackground = () => (

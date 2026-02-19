@@ -809,26 +809,26 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                             </div>
                                                         </td>
                                                         <td className="py-2 px-3">
-                                                            {/* Barra Financeira (Automática) */}
+                                                            {/* Barra Financeira (Automática) - AZUL */}
                                                             <div className="flex flex-col gap-0.5 w-full">
                                                                 <div className="flex justify-between items-center text-[7px] font-black uppercase text-stone-400">
                                                                     <span>Finan.</span>
-                                                                    <span className={stage.financialProgress > 100 ? 'text-red-600' : 'text-emerald-600'}>{stage.financialProgress.toFixed(2)}%</span>
+                                                                    <span className={stage.financialProgress > 100 ? 'text-red-600' : 'text-blue-600'}>{stage.financialProgress.toFixed(2)}%</span>
                                                                 </div>
                                                                 <div className="h-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
-                                                                    <div className={`h-full transition-all duration-500 ${stage.financialProgress > 100 ? 'bg-red-500' : 'bg-emerald-600'}`} style={{ width: `${Math.min(stage.financialProgress, 100)}%` }}></div>
+                                                                    <div className={`h-full transition-all duration-500 ${stage.financialProgress > 100 ? 'bg-red-500' : 'bg-blue-600'}`} style={{ width: `${Math.min(stage.financialProgress, 100)}%` }}></div>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                         <td className="py-2 px-2">
-                                                            {/* Barra Física (Manual) - AZUL */}
+                                                            {/* Barra Física (Manual) - VERDE */}
                                                             <div className="flex flex-col gap-0.5 w-full">
                                                                 <div className="flex justify-between items-center text-[7px] font-black uppercase text-stone-400">
                                                                     <span>Fis.</span>
-                                                                    <span className="text-blue-700">{stage.progress.toFixed(2)}%</span>
+                                                                    <span className="text-emerald-700">{stage.progress.toFixed(2)}%</span>
                                                                 </div>
                                                                 <div className="h-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
-                                                                    <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${Math.min(stage.progress, 100)}%` }}></div>
+                                                                    <div className="h-full bg-emerald-600 rounded-full transition-all duration-500" style={{ width: `${Math.min(stage.progress, 100)}%` }}></div>
                                                                 </div>
                                                                 {isAdmin && (
                                                                     <input
@@ -838,7 +838,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                         step="1"
                                                                         value={stage.progress}
                                                                         onChange={(e) => handleStageProgressChange(idx, e.target.value)}
-                                                                        className="w-full h-1 mt-1 cursor-pointer accent-blue-600"
+                                                                        className="w-full h-1 mt-1 cursor-pointer accent-emerald-600"
                                                                     />
                                                                 )}
                                                             </div>
@@ -847,7 +847,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                     {expandedStages.has(stage.name) && (
                                                         <tr>
                                                             <td colSpan={8} className="bg-stone-50/50 p-0">
-                                                                <div className="px-10 py-4 border-l-2 border-emerald-500 ml-5 animate-in slide-in-from-left-2 transition-all">
+                                                                <div className="px-4 py-4 border-l-2 border-emerald-500 ml-2 animate-in slide-in-from-left-2 transition-all">
                                                                     <h5 className="text-[8px] font-black text-emerald-800 uppercase tracking-widest mb-3 flex items-center gap-2">
                                                                         <i className="fa-solid fa-list-check"></i> Detalhamento de Despesas - {stage.name}
                                                                     </h5>
