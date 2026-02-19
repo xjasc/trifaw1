@@ -1,16 +1,17 @@
 import React, { useState, useMemo } from 'react';
-import { Expense, ExpenseStatus, User, UserRole, Supplier } from '../types';
+import { Expense, ExpenseStatus, User, UserRole, Supplier, Project } from '../types';
 import { CATEGORIES } from '../constants';
 
 interface AdminExpensesProps {
     expenses: Expense[];
+    projects: Project[];
     onSaveExpense: (expense: Expense) => Promise<void>;
     onDeleteExpense: (id: string) => Promise<void>;
     currentUser: User;
     suppliers: Supplier[];
 }
 
-const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], onSaveExpense, onDeleteExpense, currentUser, suppliers = [] }) => {
+const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects = [], onSaveExpense, onDeleteExpense, currentUser, suppliers = [] }) => {
     const [showModal, setShowModal] = useState(false);
     const [filterMonth, setFilterMonth] = useState<string>('ALL');
     // Removed unused isDownloading state
@@ -82,7 +83,7 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], onSaveExpe
             amount: Number(formData.amount),
             attachmentUrl,
             createdBy: currentUser.id,
-            projectId: 'ADMIN' // Marcador para despesa administrativa
+            projectId: formData.projectId || 'ADMIN' // Se não houver projeto, é administrativo puro
         };
 
         await onSaveExpense(newExpense);
@@ -259,6 +260,33 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], onSaveExpe
                                     <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as ExpenseStatus })} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all">
                                         <option value={ExpenseStatus.REALIZED}>Paga / Realizada</option>
                                         <option value={ExpenseStatus.FUTURE}>A Pagar / Futura</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Projeto (Opcional)</label>
+                                    <select
+                                        value={formData.projectId}
+                                        onChange={e => setFormData({ ...formData, projectId: e.target.value, stageId: '' })}
+                                        className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all font-saira"
+                                    >
+                                        <option value="">Despesa Administrativa</option>
+                                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-black uppercase text-stone-400 tracking-widest ml-1 mb-1.5 block">Etapa</label>
+                                    <select
+                                        disabled={!formData.projectId}
+                                        value={formData.stageId}
+                                        onChange={e => setFormData({ ...formData, stageId: e.target.value })}
+                                        className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl font-bold text-stone-700 text-xs outline-none focus:border-emerald-500 transition-all font-saira disabled:opacity-50"
+                                    >
+                                        <option value="">Geral / Sem Etapa</option>
+                                        {formData.projectId && projects.find(p => p.id === formData.projectId)?.stages?.map((s: any) => (
+                                            <option key={s.name} value={s.name}>{s.name}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>

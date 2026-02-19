@@ -235,6 +235,7 @@ const App: React.FC = () => {
               suppliers={data.suppliers}
               onUpdateProject={(p: Project) => api.saveProject(p)}
               currentUser={data.currentUser}
+              globalExpenses={data.adminExpenses}
             />
           )}
           {currentView === 'users' && isAdmin && (
@@ -254,6 +255,7 @@ const App: React.FC = () => {
           {currentView === 'admin-expenses' && isAdmin && (
             <AdminExpenses
               expenses={data.adminExpenses}
+              projects={data.projects}
               onSaveExpense={(newExpense: Expense) => api.saveAdminExpense(newExpense)}
               onDeleteExpense={(id: string) => api.deleteAdminExpense(id)}
               currentUser={data.currentUser}

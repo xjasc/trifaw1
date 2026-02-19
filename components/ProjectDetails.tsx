@@ -4,6 +4,7 @@ import { Project, Expense, ExpenseStatus, ProjectStatus, User, UserRole, Attachm
 import { CATEGORIES, CATEGORY_COLORS, CATEGORY_ICONS, PROJECT_STAGES_DEFAULT } from '../constants';
 import { api } from '../services/apiService';
 import JSZip from 'jszip';
+import AdminExpenses from './AdminExpenses';
 
 // Dados estáticos para Dropdowns
 const BRAZIL_STATES = [
@@ -54,12 +55,21 @@ interface ProjectDetailsProps {
     suppliers: Supplier[];
     onUpdateProject: (project: Project) => void;
     currentUser: User;
+    globalExpenses: Expense[];
 }
 
-const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], suppliers = [], onUpdateProject, currentUser }) => {
+const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], suppliers = [], onUpdateProject, currentUser, globalExpenses = [] }) => {
     if (!project) return null;
 
     const [activeTab, setActiveTab] = useState<'dashboard' | 'despesas' | 'measurements' | 'documentation' | 'photos'>('dashboard');
+    const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
+
+    const toggleStageExpansion = (stageName: string) => {
+        const newSet = new Set(expandedStages);
+        if (newSet.has(stageName)) newSet.delete(stageName);
+        else newSet.add(stageName);
+        setExpandedStages(newSet);
+    };
     const [showEntryModal, setShowEntryModal] = useState(false);
     const [showAttachModal, setShowAttachModal] = useState(false);
     const [showTopicModal, setShowTopicModal] = useState(false);
@@ -278,9 +288,11 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
         return localStages.map((stage) => {
             const stageId = stage.name;
 
-            // Somar despesas desta etapa
+            // Somar despesas desta etapa (locais do projeto + globais vinculadas)
             const stageExpenses = (project.expenses || []).filter(e => e.stageId === stageId);
-            const realCost = stageExpenses.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
+            const stageGlobalExpenses = (globalExpenses || []).filter(e => e.projectId === project.id && e.stageId === stageId);
+
+            const realCost = [...stageExpenses, ...stageGlobalExpenses].reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
 
             // Retornamos o que está no localStages (manual) + o realCost calculado + avanço financeiro automático
             const financialProgress = stage.expectedCost > 0 ? Math.min((realCost / stage.expectedCost) * 100, 100) : (realCost > 0 ? 100 : 0);
@@ -291,7 +303,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                 financialProgress
             };
         });
-    }, [localStages, project.expenses]);
+    }, [localStages, project.expenses, globalExpenses, project.id]);
 
     const handleStageWeightChange = (index: number, newWeight: string) => {
         let weight = parseFloat(newWeight.replace(',', '.'));
@@ -721,107 +733,139 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                 <table className="w-full">
                                     <thead className="bg-stone-50">
                                         <tr className="border-b border-stone-200">
+                                            <th className="w-10"></th>
                                             <th className="text-left py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider">Etapa</th>
                                             <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Peso (%)</th>
-                                            <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider">Custo Esp.</th>
-                                            <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider">Custo Real</th>
-                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider">Avanço (%)</th>
+                                            <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-32">Custo Previsto</th>
+                                            <th className="text-right py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-32">Custo Real</th>
+                                            <th className="text-center py-2 px-3 text-[8px] font-black uppercase text-stone-400 tracking-wider w-32">Avanço</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-stone-50">
                                         {projectStages.map((stage, idx) => {
                                             const isOverBudget = stage.realCost > stage.expectedCost;
                                             return (
-                                                <tr key={idx} className="hover:bg-stone-50/50 transition-colors">
-                                                    <td className="py-2 px-3">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-[8px] font-bold text-stone-300 w-4">{idx + 1}</span>
-                                                            <span className="text-[9px] font-bold uppercase text-stone-700">{stage.name}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-2 px-3 text-center">
-                                                        {isAdmin ? (
-                                                            <input
-                                                                type="number"
-                                                                step="0.01"
-                                                                min="0"
-                                                                max="100"
-                                                                value={stage.weight}
-                                                                onChange={(e) => handleStageWeightChange(idx, e.target.value)}
-                                                                className="w-12 text-center bg-white border border-stone-200 rounded px-1 py-0.5 text-[9px] font-bold text-stone-700 section-focus outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
-                                                            />
-                                                        ) : (
-                                                            <span className="text-[9px] font-bold text-stone-500">{stage.weight.toFixed(2)}%</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-2 px-3">
-                                                        <div className="flex flex-col gap-1">
-                                                            <div className="flex items-center justify-end gap-2">
-                                                                <div className="text-right flex flex-col">
-                                                                    <div className="flex items-center justify-end gap-1">
-                                                                        <span className="text-[7px] font-bold text-stone-400 uppercase">Esp.</span>
-                                                                        {isAdmin ? (
-                                                                            <input
-                                                                                type="number"
-                                                                                step="0.01"
-                                                                                value={stage.expectedCost}
-                                                                                onChange={(e) => handleStageExpectedCostChange(idx, e.target.value)}
-                                                                                className="w-20 text-right bg-white border border-stone-200 rounded px-1 py-0.5 text-[10px] font-bold text-stone-700 outline-none focus:border-emerald-400"
-                                                                            />
-                                                                        ) : (
-                                                                            <span className="text-[10px] font-bold text-stone-600">{formatBRL(stage.expectedCost)}</span>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="flex items-center justify-end gap-1 mt-0.5">
-                                                                        <span className="text-[7px] font-bold text-stone-400 uppercase">Real</span>
-                                                                        <span className={`text-[10px] font-black ${isOverBudget ? 'text-red-600' : 'text-emerald-700'}`}>{formatBRL(stage.realCost)}</span>
-                                                                    </div>
-                                                                </div>
-                                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${isOverBudget ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}`}>
-                                                                    <i className={`fa-solid ${isOverBudget ? 'fa-triangle-exclamation' : 'fa-check'}`}></i>
-                                                                </div>
+                                                <React.Fragment key={idx}>
+                                                    <tr className={`hover:bg-stone-50/50 transition-colors ${expandedStages.has(stage.name) ? 'bg-emerald-50/30' : ''}`}>
+                                                        <td className="py-2 px-3 text-center">
+                                                            <button
+                                                                onClick={() => toggleStageExpansion(stage.name)}
+                                                                className="w-6 h-6 rounded-lg hover:bg-stone-200 transition-colors flex items-center justify-center text-stone-400"
+                                                            >
+                                                                <i className={`fa-solid fa-chevron-${expandedStages.has(stage.name) ? 'up' : 'down'} text-[8px]`}></i>
+                                                            </button>
+                                                        </td>
+                                                        <td className="py-2 px-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[8px] font-bold text-stone-300 w-4">{idx + 1}</span>
+                                                                <span className="text-[10px] font-black uppercase text-stone-700 tracking-tight">{stage.name}</span>
                                                             </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-2 px-3">
-                                                        <div className="flex flex-col items-center gap-1 group/slider">
-                                                            <div className="flex items-center justify-between w-full px-1">
-                                                                <span className="text-[10px] font-black text-emerald-800 italic">{stage.progress}%</span>
-                                                            </div>
-                                                            <div className="relative w-full h-4 flex items-center">
-                                                                <div className="absolute inset-0 bg-stone-100 rounded-full h-1.5 top-1/2 -translate-y-1/2 border border-stone-200 overflow-hidden">
-                                                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${stage.progress}%` }}></div>
-                                                                </div>
-                                                                {isAdmin && (
-                                                                    <input
-                                                                        type="range"
-                                                                        min="0"
-                                                                        max="100"
-                                                                        step="1"
-                                                                        value={stage.progress}
-                                                                        onChange={(e) => handleStageProgressChange(idx, e.target.value)}
-                                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                                    />
+                                                        </td>
+                                                        <td className="py-2 px-3 text-center">
+                                                            {isAdmin ? (
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0"
+                                                                    max="100"
+                                                                    value={stage.weight}
+                                                                    onChange={(e) => handleStageWeightChange(idx, e.target.value)}
+                                                                    className="w-16 text-center bg-white border border-stone-200 rounded px-1 py-1 text-[10px] font-black text-stone-700 focus:border-emerald-500 outline-none"
+                                                                />
+                                                            ) : (
+                                                                <span className="text-[10px] font-black text-stone-500">{stage.weight.toFixed(2)}%</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="py-2 px-3 text-right">
+                                                            {isAdmin ? (
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    value={stage.expectedCost}
+                                                                    onChange={(e) => handleStageExpectedCostChange(idx, e.target.value)}
+                                                                    className="w-24 text-right bg-white border border-stone-200 rounded px-1 py-1 text-[10px] font-black text-stone-700 focus:border-emerald-500 outline-none"
+                                                                />
+                                                            ) : (
+                                                                <span className="text-[10px] font-black text-stone-600 font-mono">{formatBRL(stage.expectedCost)}</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="py-2 px-3 text-right">
+                                                            <span className={`text-[10px] font-black font-mono ${isOverBudget ? 'text-red-600' : 'text-emerald-700'}`}>
+                                                                {formatBRL(stage.realCost)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-2 px-3">
+                                                            <div className="flex items-center gap-2 justify-center">
+                                                                {isAdmin ? (
+                                                                    <div className="relative group w-full">
+                                                                        <input
+                                                                            type="number"
+                                                                            min="0"
+                                                                            max="100"
+                                                                            step="1"
+                                                                            value={stage.progress}
+                                                                            onChange={(e) => handleStageProgressChange(idx, e.target.value)}
+                                                                            className="w-16 text-center bg-white border border-stone-200 rounded px-1 py-1 text-[10px] font-black text-emerald-700 focus:border-emerald-500 outline-none"
+                                                                        />
+                                                                        <span className="absolute -right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-emerald-800">%</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex items-center gap-2 w-full">
+                                                                        <div className="flex-1 bg-stone-100 rounded-full h-1 border border-stone-200 overflow-hidden">
+                                                                            <div className="h-full bg-emerald-500" style={{ width: `${stage.progress}%` }}></div>
+                                                                        </div>
+                                                                        <span className="text-[10px] font-black text-emerald-900">{stage.progress}%</span>
+                                                                    </div>
                                                                 )}
-                                                                <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-emerald-600 rounded-full shadow-md pointer-events-none transition-all hidden group-hover/slider:block" style={{ left: `calc(${stage.progress}% - 6px)` }}></div>
                                                             </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-2 px-3">
-                                                        <div className="flex flex-col gap-1 items-center">
-                                                            <span className="text-[9px] font-bold text-stone-500">{stage.financialProgress?.toFixed(1)}%</span>
-                                                            <div className="w-full bg-stone-100 rounded-full h-1 border border-stone-200 overflow-hidden">
-                                                                <div className={`h-full rounded-full transition-all duration-500 ${isOverBudget ? 'bg-red-400' : 'bg-blue-400'}`} style={{ width: `${stage.financialProgress}%` }}></div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                        </td>
+                                                    </tr>
+                                                    {expandedStages.has(stage.name) && (
+                                                        <tr>
+                                                            <td colSpan={6} className="bg-stone-50/50 p-0">
+                                                                <div className="px-10 py-4 border-l-2 border-emerald-500 ml-5 animate-in slide-in-from-left-2 transition-all">
+                                                                    <h5 className="text-[8px] font-black text-emerald-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                                                        <i className="fa-solid fa-list-check"></i> Detalhamento de Despesas - {stage.name}
+                                                                    </h5>
+                                                                    <div className="bg-white rounded-lg border border-stone-200 overflow-hidden shadow-sm">
+                                                                        <table className="w-full text-left">
+                                                                            <thead className="bg-stone-100/50 text-[7px] font-black uppercase text-stone-400">
+                                                                                <tr>
+                                                                                    <th className="py-1.5 px-3">Data</th>
+                                                                                    <th className="py-1.5 px-3">Descrição</th>
+                                                                                    <th className="py-1.5 px-3">Fornecedor</th>
+                                                                                    <th className="py-1.5 px-3 text-right">Valor</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody className="divide-y divide-stone-100">
+                                                                                {(project.expenses || []).filter(e => e.stageId === stage.name).length === 0 ? (
+                                                                                    <tr>
+                                                                                        <td colSpan={4} className="py-4 text-center text-[9px] font-bold text-stone-400 italic">Nenhuma despesa vinculada a esta etapa.</td>
+                                                                                    </tr>
+                                                                                ) : (
+                                                                                    (project.expenses || []).filter(e => e.stageId === stage.name).map((exp, eidx) => (
+                                                                                        <tr key={eidx} className="text-[9px] hover:bg-stone-50 transition-colors">
+                                                                                            <td className="py-2 px-3 text-stone-500">{new Date(exp.date).toLocaleDateString('pt-BR')}</td>
+                                                                                            <td className="py-2 px-3 font-bold text-stone-700">{exp.description}</td>
+                                                                                            <td className="py-2 px-3 text-stone-500 font-bold">{exp.supplier}</td>
+                                                                                            <td className="py-2 px-3 text-right font-black text-emerald-800">{formatBRL(exp.amount)}</td>
+                                                                                        </tr>
+                                                                                    ))
+                                                                                )}
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
                                             );
                                         })}
                                     </tbody>
                                     <tfoot className="bg-stone-50 border-t border-stone-200">
                                         <tr>
-                                            <td className="py-2 px-3 text-[9px] font-black uppercase text-stone-600">Total</td>
+                                            <td colSpan={2} className="py-2 px-3 text-[9px] font-black uppercase text-stone-600">Total</td>
                                             <td className="py-2 px-3 text-center text-[9px] font-black text-stone-600">
                                                 {projectStages.reduce((acc, s) => acc + s.weight, 0).toFixed(2)}%
                                             </td>
@@ -1403,6 +1447,8 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                         </div>
                     )
                 }
+
+
             </div >
 
             {/* MODAL DE EDIÇÃO DE ANEXO (LEGENDA) */}
