@@ -102,7 +102,7 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
         {/* Budget Contratos Ativos */}
         <StatCard
           title="Budget Contratos"
-          value={formatCompact(stats.totalBudgetActive)}
+          value={formatBRL(stats.totalBudgetActive)}
           fullValue={formatBRL(stats.totalBudgetActive)}
           icon="fa-file-signature"
           theme="stone"
@@ -111,7 +111,7 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
         {/* Medições Ativas - AZUL */}
         <StatCard
           title="Medições (Entradas)"
-          value={formatCompact(stats.totalMeasurementsActive)}
+          value={formatBRL(stats.totalMeasurementsActive)}
           fullValue={formatBRL(stats.totalMeasurementsActive)}
           icon="fa-hand-holding-dollar"
           theme="blue"
@@ -120,7 +120,7 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
         {/* Despesas Ativas */}
         <StatCard
           title="Despesas (Saídas)"
-          value={formatCompact(stats.totalExpensesActive)}
+          value={formatBRL(stats.totalExpensesActive)}
           fullValue={formatBRL(stats.totalExpensesActive)}
           icon="fa-money-bill-transfer"
           theme="amber"
@@ -129,7 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
         {/* Saldo Contratual - VERDE (EMERALD) SE POSITIVO */}
         <StatCard
           title="Saldo (Caixa)"
-          value={formatCompact(stats.contractualBalance)}
+          value={formatBRL(stats.contractualBalance)}
           fullValue={formatBRL(stats.contractualBalance)}
           icon="fa-scale-balanced"
           theme={stats.contractualBalance >= 0 ? "emerald" : "red"}
@@ -248,8 +248,8 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
 
                   <td className="px-6 py-5 text-center align-middle">
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center mx-auto shadow-sm border ${project.stats.isPositive
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                        : 'bg-red-50 text-red-600 border-red-100'
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                      : 'bg-red-50 text-red-600 border-red-100'
                       }`}>
                       <i className={`fa-solid ${project.stats.isPositive ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'} text-[10px]`}></i>
                     </div>

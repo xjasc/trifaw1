@@ -783,7 +783,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                     className="w-12 text-center bg-white border border-stone-200 rounded px-1 py-1 text-[9px] font-black text-stone-700 focus:border-emerald-500 outline-none"
                                                                 />
                                                             ) : (
-                                                                <span className="text-[9px] font-black text-stone-500">{stage.weight.toFixed(1)}%</span>
+                                                                <span className="text-[9px] font-black text-stone-500">{stage.weight.toFixed(2)}%</span>
                                                             )}
                                                         </td>
                                                         <td className="py-2 px-3 text-right">
@@ -815,7 +815,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                             <div className="flex flex-col gap-0.5 w-full">
                                                                 <div className="flex justify-between items-center text-[7px] font-black uppercase text-stone-400">
                                                                     <span>Finan.</span>
-                                                                    <span className={stage.financialProgress > 100 ? 'text-red-600' : 'text-emerald-600'}>{stage.financialProgress.toFixed(0)}%</span>
+                                                                    <span className={stage.financialProgress > 100 ? 'text-red-600' : 'text-emerald-600'}>{stage.financialProgress.toFixed(2)}%</span>
                                                                 </div>
                                                                 <div className="h-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
                                                                     <div className={`h-full transition-all duration-500 ${stage.financialProgress > 100 ? 'bg-red-500' : 'bg-emerald-600'}`} style={{ width: `${Math.min(stage.financialProgress, 100)}%` }}></div>
@@ -827,7 +827,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                             <div className="flex flex-col gap-0.5 w-full">
                                                                 <div className="flex justify-between items-center text-[7px] font-black uppercase text-stone-400">
                                                                     <span>Fis.</span>
-                                                                    <span className="text-stone-700">{stage.progress.toFixed(0)}%</span>
+                                                                    <span className="text-stone-700">{stage.progress.toFixed(2)}%</span>
                                                                 </div>
                                                                 {isAdmin ? (
                                                                     <input
