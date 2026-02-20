@@ -69,7 +69,7 @@ interface ProjectDetailsProps {
 const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], suppliers = [], onUpdateProject, currentUser, globalExpenses = [] }) => {
     if (!project) return null;
 
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'despesas' | 'admin-expenses' | 'measurements' | 'documentation' | 'photos'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'despesas' | 'measurements' | 'documentation' | 'photos'>('dashboard');
     const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
 
     const toggleStageExpansion = (stageName: string) => {
@@ -209,7 +209,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
     const sortedMeasurements = useMemo(() => [...(project.measurements || [])].sort((a: Measurement, b: Measurement) => new Date(a.date).getTime() - new Date(b.date).getTime()), [project.measurements]);
 
     // -- LÓGICA DE GRÁFICOS PARA O PROJETO ESPECÍFICO --
-    const CHART_COLORS = ['#022c22', '#065f46', '#0f766e', '#b45309', '#d97706', '#1e3a8a', '#4338ca', '#7c3aed'];
+    const CHART_COLORS = ['#042f2e', '#064e3b', '#065f46', '#0f766e', '#134e4a', '#1e3a8a', '#312e81', '#4c1d95', '#581c87'];
 
     const projectChartStats = useMemo(() => {
         const categoryTotals: Record<string, number> = {};
@@ -335,6 +335,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
     const projectStages = useMemo(() => {
         return localStages.map((stage) => {
             const stageId = stage.name;
+            const expectedCost = (Number(project.budget) || 0) * (stage.weight / 100);
 
             // Somar despesas desta etapa (locais do projeto + globais vinculadas)
             const stageExpenses = (project.expenses || []).filter(e => e.stageId === stageId);
@@ -342,16 +343,17 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
 
             const realCost = [...stageExpenses, ...stageGlobalExpenses].reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
 
-            // Retornamos o que está no localStages (manual) + o realCost calculado + avanço financeiro automático
-            const financialProgress = stage.expectedCost > 0 ? Math.min((realCost / stage.expectedCost) * 100, 100) : (realCost > 0 ? 100 : 0);
+            // CÁLCULO CORRETO DO AVANÇO FINANCEIRO: REAL / PREVISTO
+            const financialProgress = expectedCost > 0 ? (realCost / expectedCost) * 100 : (realCost > 0 ? 100 : 0);
 
             return {
                 ...stage,
+                expectedCost,
                 realCost,
                 financialProgress
             };
         });
-    }, [localStages, project.expenses, globalExpenses, project.id]);
+    }, [localStages, project.expenses, globalExpenses, project.id, project.budget]);
 
     const handleStageWeightChange = (index: number, newWeight: string) => {
         const val = parseFloat(newWeight) || 0;
@@ -832,39 +834,48 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                 <span className="text-[9px] font-black text-stone-500">{stage.weight.toFixed(2)}%</span>
                                                             )}
                                                         </td>
-                                                        <td className="py-2 px-3 text-right">
-                                                            <span className="text-[9px] font-black text-stone-600 font-mono">
-                                                                {formatBRL((Number(project.budget) || 0) * (stage.weight / 100))}
+                                                        <td className="py-4 px-3 text-right">
+                                                            <span className="text-[10px] font-black text-stone-600 font-mono">
+                                                                {formatBRL(stage.expectedCost)}
                                                             </span>
                                                         </td>
-                                                        <td className="py-2 px-3 text-right">
-                                                            <span className={`text-[9px] font-black font-mono ${isOverBudget ? 'text-red-600' : 'text-emerald-700'}`}>
+                                                        <td className="py-4 px-3 text-right">
+                                                            <span className={`text-[10px] font-black font-mono ${isOverBudget ? 'text-red-600' : 'text-emerald-700'}`}>
                                                                 {formatBRL(stage.realCost)}
                                                             </span>
                                                         </td>
-                                                        <td className="py-2 px-2 text-center">
-                                                            <div className={`text-[10px] font-black px-2 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-sm border ${isOverBudget ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
-                                                                <i className={`fa-solid fa-${isOverBudget ? 'triangle-exclamation' : 'circle-check'} text-[9px]`}></i>
-                                                                <span className="tracking-tighter">{isOverBudget ? '-' : '+'}</span>
+                                                        <td className="py-4 px-2 text-center">
+                                                            <div className={`text-[9px] font-black px-3 py-1.5 rounded-xl inline-flex flex-col items-center gap-0.5 shadow-sm border transition-all ${isOverBudget ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
+                                                                <div className="flex items-center gap-1">
+                                                                    <i className={`fa-solid fa-${isOverBudget ? 'triangle-exclamation' : 'circle-check'} text-[8px]`}></i>
+                                                                    <span className="tracking-tighter">{isOverBudget ? 'NEGATIVO' : 'POSITIVO'}</span>
+                                                                </div>
+                                                                <span className="text-[10px] font-mono whitespace-nowrap">
+                                                                    {formatBRL(stage.expectedCost - stage.realCost)}
+                                                                </span>
                                                             </div>
                                                         </td>
-                                                        <td className="py-2 px-3">
+                                                        <td className="py-4 px-4 min-w-[130px]">
                                                             {/* Barra Financeira (Automática) - AZUL */}
-                                                            <div className="flex flex-col gap-0.5 w-full">
-                                                                <div className="flex justify-between items-center text-[7px] font-black uppercase text-stone-400">
-                                                                    <span>Finan.</span>
-                                                                    <span className={stage.financialProgress > 100 ? 'text-red-600' : 'text-blue-600'}>{stage.financialProgress.toFixed(2)}%</span>
+                                                            <div className="flex flex-col gap-1 w-full">
+                                                                <div className="flex justify-between items-center text-[10px] font-black uppercase text-blue-800">
+                                                                    <span className="opacity-50 text-[8px]">Fin.</span>
+                                                                    <span className={`px-1.5 py-0.5 rounded-md border shadow-sm ${stage.financialProgress > 100 ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'}`}>{stage.financialProgress.toFixed(1)}%</span>
                                                                 </div>
-                                                                <div className="h-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
-                                                                    <div className={`h-full transition-all duration-500 ${stage.financialProgress > 100 ? 'bg-red-500' : 'bg-blue-600'}`} style={{ width: `${Math.min(stage.financialProgress, 100)}%` }}></div>
+                                                                <div className="h-2.5 bg-stone-100 rounded-full overflow-hidden border border-stone-200 shadow-inner">
+                                                                    <div className={`h-full transition-all duration-500 shadow-sm ${stage.financialProgress > 100 ? 'bg-red-500' : 'bg-blue-600'}`} style={{ width: `${Math.min(stage.financialProgress, 100)}%` }}></div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td className="py-2 px-2">
+                                                        <td className="py-4 px-4 min-w-[120px]">
                                                             {/* Barra Física (Manual) - VERDE */}
-                                                            <div className="flex flex-col gap-0.5 w-full">
-                                                                <div className="h-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
-                                                                    <div className="h-full bg-emerald-600 rounded-full transition-all duration-500" style={{ width: `${Math.min(stage.progress, 100)}%` }}></div>
+                                                            <div className="flex flex-col gap-1 w-full relative group/fis">
+                                                                <div className="flex justify-between items-center text-[10px] font-black uppercase text-emerald-800">
+                                                                    <span className="opacity-50 text-[8px]">Fis.</span>
+                                                                    <span className="bg-emerald-100 px-1.5 py-0.5 rounded-md shadow-sm border border-emerald-200">{stage.progress.toFixed(0)}%</span>
+                                                                </div>
+                                                                <div className="h-2.5 bg-stone-100 rounded-full overflow-hidden border border-stone-200 shadow-inner">
+                                                                    <div className="h-full bg-emerald-600 rounded-full transition-all duration-500 shadow-sm" style={{ width: `${Math.min(stage.progress, 100)}%` }}></div>
                                                                 </div>
                                                                 {isAdmin && (
                                                                     <input
@@ -947,9 +958,9 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
             {/* TABS NAVEGAÇÃO */}
             <div className="sticky top-2 z-40">
                 <div className="relative bg-[#e6e4e0]/95 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-stone-300 flex overflow-x-auto gap-2 items-center justify-center no-scrollbar">
-                    {(isAdmin ? ['dashboard', 'despesas', 'admin-expenses', 'measurements', 'documentation', 'photos'] : ['photos', 'documentation']).map((tab: any) => (
+                    {(isAdmin ? ['dashboard', 'despesas', 'measurements', 'documentation', 'photos'] : ['photos', 'documentation']).map((tab: any) => (
                         <button key={tab} onClick={() => { setActiveTab(tab); setFilterMonth('ALL'); }} className={`flex-none py-2.5 px-6 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === tab ? 'bg-emerald-950 text-white shadow-md' : 'text-stone-500 hover:text-emerald-900 hover:bg-white/50'}`}>
-                            {tab === 'dashboard' ? 'Financeiro' : tab === 'despesas' ? 'Despesas' : tab === 'admin-expenses' ? 'Despesas Adm' : tab === 'measurements' ? 'Faturamento' : tab === 'documentation' ? 'Documentos' : 'Relatório Fotográfico'}
+                            {tab === 'dashboard' ? 'Financeiro' : tab === 'despesas' ? 'Despesas' : tab === 'measurements' ? 'Faturamento' : tab === 'documentation' ? 'Documentos' : 'Relatório Fotográfico'}
                         </button>
                     ))}
                 </div>
@@ -1120,14 +1131,15 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                 data={projectChartStats.categoryData}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={50}
-                                                outerRadius={80}
+                                                innerRadius={60}
+                                                outerRadius={90}
                                                 paddingAngle={5}
                                                 dataKey="value"
-                                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                                                labelLine={false}
                                             >
                                                 {projectChartStats.categoryData.map((_entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="rgba(255,255,255,0.2)" />
+                                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="rgba(255,255,255,0.1)" />
                                                 ))}
                                             </Pie>
                                             <Tooltip
@@ -1159,7 +1171,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                 cursor={{ fill: 'rgba(0,0,0,0.02)' }}
                                                 contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold', fontSize: '10px' }}
                                             />
-                                            <Bar dataKey="value" fill="#064e3b" radius={[0, 8, 8, 0]} label={{ position: 'right', formatter: (val: any) => formatCompact(Number(val) || 0), fontSize: 8, fontWeight: 'bold', fill: '#064e3b' }} />
+                                            <Bar dataKey="value" fill="#064e3b" radius={[0, 8, 8, 0]} label={{ position: 'right', formatter: (val: any) => formatCompact(Number(val) || 0), fontSize: 9, fontWeight: 'bold', fill: '#064e3b' }} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -1574,18 +1586,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                     )
                 }
 
-                {activeTab === 'admin-expenses' && isAdmin && (
-                    <div className="max-w-6xl mx-auto animate-in fade-in duration-500">
-                        <AdminExpenses
-                            expenses={globalExpenses.filter(e => e.projectId === project.id)}
-                            projects={[]}
-                            onSaveExpense={async (expense: Expense) => { await api.saveAdminExpense({ ...expense, projectId: project.id }); }}
-                            onDeleteExpense={async (id: string) => { await api.deleteAdminExpense(id); }}
-                            currentUser={currentUser}
-                            suppliers={suppliers}
-                        />
-                    </div>
-                )}
+                {/* REMOVIDO: DESPESAS ADMIN DENTRO DO PROJETO */}
             </div >
 
             {/* MODAL DE EDIÇÃO DE ANEXO (LEGENDA) */}

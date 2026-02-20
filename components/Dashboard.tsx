@@ -13,7 +13,7 @@ interface DashboardProps {
   userRole: UserRole;
 }
 
-const CHART_COLORS = ['#064e3b', '#065f46', '#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
+const CHART_COLORS = ['#042f2e', '#064e3b', '#065f46', '#0f766e', '#134e4a', '#1e3a8a', '#312e81', '#4c1d95', '#581c87'];
 
 const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = [], navigateToProject }) => {
 
@@ -51,9 +51,6 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
     const detailedProjects = activeProjects.map(p => {
       const pBudget = Number(p.budget) || 0;
 
-      // Processar todas as despesas do projeto para os gráficos
-      (p.expenses || []).forEach(processExpense);
-
       // Somar Despesas Realizadas deste projeto para KPI
       const pExpenses = (p.expenses || [])
         .filter(e => e.status === ExpenseStatus.REALIZED)
@@ -81,6 +78,11 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
           isPositive: pBalance >= 0
         }
       };
+    });
+
+    // Processar TODAS as despesas de TODOS os projetos para os gráficos globais
+    projects.forEach(p => {
+      (p.expenses || []).forEach(processExpense);
     });
 
     // Somar Despesas Administrativas Realizadas
@@ -242,13 +244,14 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
-                  outerRadius={90}
+                  outerRadius={100}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}
                 >
                   {stats.categoryData.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="rgba(255,255,255,0.2)" />
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="rgba(255,255,255,0.1)" />
                   ))}
                 </Pie>
                 <Tooltip
@@ -280,7 +283,7 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
                   cursor={{ fill: 'rgba(0,0,0,0.02)' }}
                   contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold' }}
                 />
-                <Bar dataKey="value" fill="#064e3b" radius={[0, 10, 10, 0]} label={{ position: 'right', formatter: (val: any) => formatCompact(Number(val) || 0), fontSize: 9, fontWeight: 'bold', fill: '#064e3b' }} />
+                <Bar dataKey="value" fill="#064e3b" radius={[0, 10, 10, 0]} label={{ position: 'right', formatter: (val: any) => formatCompact(Number(val) || 0), fontSize: 10, fontWeight: 'bold', fill: '#064e3b' }} />
               </BarChart>
             </ResponsiveContainer>
           </div>
