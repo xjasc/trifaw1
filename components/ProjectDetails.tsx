@@ -1,4 +1,4 @@
-// VERSION: 20260216_0905_FORCE_SYNC
+﻿// VERSION: 20260216_0905_FORCE_SYNC
 import React, { useState, useMemo, useEffect } from 'react';
 import { Project, Expense, ExpenseStatus, ProjectStatus, User, UserRole, Attachment, Measurement, Supplier, PhotoTopic, ClientData, ResponsibleData, ProjectStage } from '../types';
 import { CATEGORIES, CATEGORY_COLORS, CATEGORY_ICONS, PROJECT_STAGES_DEFAULT } from '../constants';
@@ -209,7 +209,18 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
     const sortedMeasurements = useMemo(() => [...(project.measurements || [])].sort((a: Measurement, b: Measurement) => new Date(a.date).getTime() - new Date(b.date).getTime()), [project.measurements]);
 
     // -- LÓGICA DE GRÁFICOS PARA O PROJETO ESPECÍFICO --
-    const CHART_COLORS = ['#042f2e', '#064e3b', '#065f46', '#0f766e', '#134e4a', '#1e3a8a', '#312e81', '#4c1d95', '#581c87'];
+    // Paleta de cores distintas e profissionais
+    const CHART_COLORS = [
+        '#0f766e', // teal-700
+        '#1d4ed8', // blue-700
+        '#b45309', // amber-700
+        '#7c3aed', // violet-600
+        '#be185d', // pink-700
+        '#065f46', // emerald-800
+        '#c2410c', // orange-700
+        '#0369a1', // sky-700
+        '#4338ca', // indigo-700
+    ];
 
     const projectChartStats = useMemo(() => {
         const categoryTotals: Record<string, number> = {};
@@ -247,6 +258,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
 
         return { categoryData, supplierData };
     }, [project.expenses, globalExpenses, project.id]);
+
+    // Formatadores para gr\u00e1ficos (usados nos labels de Pie e Bar)
+    const formatBRL = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(val || 0);
+    const formatCompact = (val: number) => new Intl.NumberFormat('pt-BR', { notation: 'compact', compactDisplay: 'short', style: 'currency', currency: 'BRL' }).format(val || 0);
 
     // Lista de Meses Disponíveis para Filtro (Baseado na aba ativa)
     const availableMonths = useMemo(() => {
@@ -790,13 +805,13 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                     <thead className="bg-stone-50">
                                         <tr className="border-b border-stone-200">
                                             <th className="w-8"></th>
-                                            <th className="text-left py-2 px-1 text-[8px] font-black uppercase text-stone-400 tracking-wider">Etapa</th>
-                                            <th className="text-center py-2 px-1 text-[8px] font-black uppercase text-stone-400 tracking-wider w-14">Peso (%)</th>
-                                            <th className="text-right py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-24">Custo Previsto</th>
-                                            <th className="text-right py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Custo Real</th>
-                                            <th className="text-center py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Saldo</th>
-                                            <th className="text-center py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-28">Av. Finan</th>
-                                            <th className="text-center py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-28">Av. Físico</th>
+                                            <th className="text-left py-3 px-3 text-[9px] font-black uppercase text-stone-400 tracking-wider">Etapa</th>
+                                            <th className="text-center py-3 px-3 text-[9px] font-black uppercase text-stone-400 tracking-wider w-20">Peso (%)</th>
+                                            <th className="text-right py-3 px-4 text-[9px] font-black uppercase text-stone-400 tracking-wider w-32">Custo Previsto</th>
+                                            <th className="text-right py-3 px-4 text-[9px] font-black uppercase text-stone-400 tracking-wider w-28">Custo Real</th>
+                                            <th className="text-center py-3 px-3 text-[9px] font-black uppercase text-stone-400 tracking-wider w-36">Saldo</th>
+                                            <th className="text-center py-3 px-3 text-[9px] font-black uppercase text-stone-400 tracking-wider w-36">Av. Finan.</th>
+                                            <th className="text-center py-3 px-3 text-[9px] font-black uppercase text-stone-400 tracking-wider w-36">Av. Físico</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-stone-50">
@@ -805,7 +820,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                             return (
                                                 <React.Fragment key={idx}>
                                                     <tr className={`hover:bg-stone-50/50 transition-colors ${expandedStages.has(stage.name) ? 'bg-emerald-50/30' : ''}`}>
-                                                        <td className="py-2 px-3 text-center">
+                                                        <td className="py-3 px-3 text-center">
                                                             <button
                                                                 onClick={() => toggleStageExpansion(stage.name)}
                                                                 className="w-6 h-6 rounded-lg hover:bg-stone-200 transition-colors flex items-center justify-center text-stone-400"
@@ -813,13 +828,13 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                 <i className={`fa-solid fa-chevron-${expandedStages.has(stage.name) ? 'up' : 'down'} text-[8px]`}></i>
                                                             </button>
                                                         </td>
-                                                        <td className="py-2 px-1">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className="text-[8px] font-bold text-stone-300 w-3">{idx + 1}</span>
-                                                                <span className="text-[10px] font-black uppercase text-stone-700 tracking-tight leading-none">{stage.name}</span>
+                                                        <td className="py-3 px-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[9px] font-bold text-stone-300 w-4">{idx + 1}</span>
+                                                                <span className="text-xs font-black uppercase text-stone-700 tracking-tight leading-none">{stage.name}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="py-2 px-3 text-center">
+                                                        <td className="py-3 px-3 text-center">
                                                             {isAdmin ? (
                                                                 <input
                                                                     type="number"
@@ -828,19 +843,19 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                                     max="100"
                                                                     value={stage.weight}
                                                                     onChange={(e) => handleStageWeightChange(idx, e.target.value)}
-                                                                    className="w-12 text-center bg-white border border-stone-200 rounded px-1 py-1 text-[9px] font-black text-stone-700 focus:border-emerald-500 outline-none"
+                                                                    className="w-14 text-center bg-white border border-stone-200 rounded px-1 py-1.5 text-[10px] font-black text-stone-700 focus:border-emerald-500 outline-none"
                                                                 />
                                                             ) : (
-                                                                <span className="text-[9px] font-black text-stone-500">{stage.weight.toFixed(2)}%</span>
+                                                                <span className="text-[10px] font-black text-stone-500">{stage.weight.toFixed(2)}%</span>
                                                             )}
                                                         </td>
-                                                        <td className="py-4 px-3 text-right">
-                                                            <span className="text-[10px] font-black text-stone-600 font-mono">
+                                                        <td className="py-3 px-4 text-right">
+                                                            <span className="text-xs font-black text-stone-600 font-mono whitespace-nowrap">
                                                                 {formatBRL(stage.expectedCost)}
                                                             </span>
                                                         </td>
-                                                        <td className="py-4 px-3 text-right">
-                                                            <span className={`text-[10px] font-black font-mono ${isOverBudget ? 'text-red-600' : 'text-emerald-700'}`}>
+                                                        <td className="py-3 px-4 text-right">
+                                                            <span className={`text-xs font-black font-mono whitespace-nowrap ${isOverBudget ? 'text-red-600' : 'text-emerald-700'}`}>
                                                                 {formatBRL(stage.realCost)}
                                                             </span>
                                                         </td>

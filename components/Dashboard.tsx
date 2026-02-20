@@ -13,7 +13,18 @@ interface DashboardProps {
   userRole: UserRole;
 }
 
-const CHART_COLORS = ['#042f2e', '#064e3b', '#065f46', '#0f766e', '#134e4a', '#1e3a8a', '#312e81', '#4c1d95', '#581c87'];
+// Paleta de cores distintas e profissionais para os gráficos
+const CHART_COLORS = [
+  '#0f766e', // teal-700
+  '#1d4ed8', // blue-700
+  '#b45309', // amber-700
+  '#7c3aed', // violet-600
+  '#be185d', // pink-700
+  '#065f46', // emerald-800
+  '#c2410c', // orange-700
+  '#0369a1', // sky-700
+  '#4338ca', // indigo-700
+];
 
 const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = [], navigateToProject }) => {
 

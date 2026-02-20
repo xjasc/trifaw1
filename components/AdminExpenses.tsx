@@ -123,21 +123,14 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
         }
     };
 
-    // Reusable Classes (Standardized with ProjectDetails)
+    // Reusable Classes — Padronizado com fundo branco (mesmos outros modais)
     const modalContainerClass = "fixed inset-0 z-[9999] flex items-center justify-center md:p-4 font-inter";
-    const modalBackdropClass = "absolute inset-0 bg-stone-900/95 backdrop-blur-sm transition-opacity";
-    const modalContentClass = "relative w-full h-full md:h-auto md:max-h-[85vh] md:max-w-2xl bg-emerald-950 md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-300";
-    const modalHeaderClass = "relative z-10 shrink-0 py-5 px-6 md:px-8 border-b border-white/10 flex justify-between items-center bg-black/20 backdrop-blur-sm";
-    const inputClass = "w-full p-3.5 bg-white border border-stone-300 rounded-xl font-bold text-stone-800 text-xs outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-stone-400";
-    const selectClass = "w-full p-3.5 bg-white border border-stone-300 rounded-xl font-bold text-stone-800 text-xs outline-none focus:border-emerald-500 appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500/20 shadow-sm";
-    const labelClass = "text-[9px] font-black uppercase text-emerald-200 tracking-widest ml-1 mb-1.5 block drop-shadow-sm";
-
-    const ModalBackground = () => (
-        <div className="absolute inset-0 z-0 pointer-events-none">
-            <div className="absolute inset-0 bg-cover bg-center opacity-30 grayscale-[20%]" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&q=80&w=2070')` }}></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/95 via-emerald-950/90 to-emerald-950/95 mix-blend-multiply"></div>
-        </div>
-    );
+    const modalBackdropClass = "absolute inset-0 bg-stone-900/80 backdrop-blur-sm transition-opacity";
+    const modalContentClass = "relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-2xl bg-white md:rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-300 border border-stone-200";
+    const modalHeaderClass = "shrink-0 py-5 px-6 md:px-8 border-b border-stone-100 flex justify-between items-center bg-emerald-950";
+    const inputClass = "w-full p-3.5 bg-white border border-stone-200 rounded-xl font-bold text-stone-800 text-xs outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-stone-400 shadow-sm";
+    const selectClass = "w-full p-3.5 bg-white border border-stone-200 rounded-xl font-bold text-stone-800 text-xs outline-none focus:border-emerald-500 appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500/20 shadow-sm";
+    const labelClass = "text-[9px] font-black uppercase text-stone-500 tracking-widest ml-1 mb-1.5 block";
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-12">
@@ -270,7 +263,6 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
                 <div className={modalContainerClass}>
                     <div className={modalBackdropClass} onClick={() => setShowModal(false)}></div>
                     <div className={modalContentClass}>
-                        <ModalBackground />
                         <div className={modalHeaderClass}>
                             <div>
                                 <h3 className="text-xl md:text-2xl font-black text-white uppercase italic tracking-tight drop-shadow-md">
@@ -283,7 +275,8 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
+                        {/* Body branco — campos totalmente visíveis */}
+                        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-white">
                             <form onSubmit={handleSave} className="space-y-5">
                                 <div>
                                     <label className={labelClass}>Descrição da Despesa</label>
@@ -361,20 +354,24 @@ const AdminExpenses: React.FC<AdminExpensesProps> = ({ expenses = [], projects =
                                     <label className={labelClass}>Comprovante / Anexo</label>
                                     <div className="relative group">
                                         <input type="file" onChange={e => setExpenseFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                                        <div className="w-full p-4 bg-white/5 border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center gap-3 group-hover:bg-white/10 group-hover:border-emerald-500/50 transition-all">
-                                            <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                                        <div className="w-full p-5 bg-stone-50 border-2 border-dashed border-stone-200 rounded-2xl flex flex-col items-center gap-3 group-hover:bg-emerald-50 group-hover:border-emerald-300 transition-all">
+                                            <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
                                                 <i className="fa-solid fa-cloud-arrow-up"></i>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-xs font-black text-white uppercase tracking-wider">{expenseFile ? expenseFile.name : 'Clique para selecionar'}</p>
-                                                <p className="text-[9px] font-bold text-emerald-300/50 uppercase tracking-widest mt-1">PDF, JPG, PNG (MÁX 5MB)</p>
+                                                <p className="text-xs font-black text-stone-700 uppercase tracking-wider">{expenseFile ? expenseFile.name : 'Clique para selecionar'}</p>
+                                                <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mt-1">PDF, JPG, PNG (MÁX 5MB)</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="pt-4 flex gap-3">
-                                    <button type="submit" className="flex-1 py-4 bg-emerald-500 text-emerald-950 rounded-2xl font-black uppercase tracking-widest hover:bg-emerald-400 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-emerald-950/20">
+                                <div className="pt-2 flex gap-3">
+                                    <button type="button" onClick={() => setShowModal(false)} className="px-5 py-4 bg-stone-100 text-stone-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-stone-200 transition-all border border-stone-200">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" className="flex-1 py-4 bg-emerald-950 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-emerald-900 active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2">
+                                        <i className="fa-solid fa-check text-sm"></i>
                                         {editingId ? 'Salvar Alterações' : 'Confirmar Registro'}
                                     </button>
                                 </div>
