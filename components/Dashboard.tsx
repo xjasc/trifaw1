@@ -242,19 +242,20 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
-                  outerRadius={100}
+                  outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {stats.categoryData.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="rgba(255,255,255,0.2)" />
                   ))}
                 </Pie>
                 <Tooltip
                   formatter={(value?: any) => formatBRL(Number(value) || 0)}
-                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold' }}
                 />
-                <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', paddingTop: '20px' }} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', paddingTop: '20px' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -270,16 +271,16 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.supplierData} layout="vertical" margin={{ left: 10, right: 30, top: 0, bottom: 0 }}>
+              <BarChart data={stats.supplierData} layout="vertical" margin={{ left: 10, right: 60, top: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 9, fontWeight: 'bold', fill: '#4b5563' }} />
+                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 9, fontWeight: 'black', fill: '#1c1917' }} />
                 <Tooltip
                   formatter={(value?: any) => formatBRL(Number(value) || 0)}
                   cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold' }}
                 />
-                <Bar dataKey="value" fill="#064e3b" radius={[0, 10, 10, 0]} />
+                <Bar dataKey="value" fill="#064e3b" radius={[0, 10, 10, 0]} label={{ position: 'right', formatter: (val: any) => formatCompact(Number(val) || 0), fontSize: 9, fontWeight: 'bold', fill: '#064e3b' }} />
               </BarChart>
             </ResponsiveContainer>
           </div>

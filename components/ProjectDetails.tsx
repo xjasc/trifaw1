@@ -4,7 +4,15 @@ import { Project, Expense, ExpenseStatus, ProjectStatus, User, UserRole, Attachm
 import { CATEGORIES, CATEGORY_COLORS, CATEGORY_ICONS, PROJECT_STAGES_DEFAULT } from '../constants';
 import { api } from '../services/apiService';
 import JSZip from 'jszip';
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import AdminExpenses from './AdminExpenses';
+
+const formatCompact = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+        notation: 'compact',
+        maximumFractionDigits: 1
+    }).format(value);
+};
 
 // Dados estáticos para Dropdowns
 const BRAZIL_STATES = [
@@ -199,6 +207,46 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
     // Listas Ordenadas
     const sortedExpenses = useMemo(() => [...(project.expenses || [])].sort((a: Expense, b: Expense) => new Date(a.date).getTime() - new Date(b.date).getTime()), [project.expenses]);
     const sortedMeasurements = useMemo(() => [...(project.measurements || [])].sort((a: Measurement, b: Measurement) => new Date(a.date).getTime() - new Date(b.date).getTime()), [project.measurements]);
+
+    // -- LÓGICA DE GRÁFICOS PARA O PROJETO ESPECÍFICO --
+    const CHART_COLORS = ['#022c22', '#065f46', '#0f766e', '#b45309', '#d97706', '#1e3a8a', '#4338ca', '#7c3aed'];
+
+    const projectChartStats = useMemo(() => {
+        const categoryTotals: Record<string, number> = {};
+        const supplierTotals: Record<string, number> = {};
+
+        const allProjectExpenses = [...(project.expenses || []), ...(globalExpenses || []).filter(e => e.projectId === project.id)];
+
+        allProjectExpenses.forEach(e => {
+            if (e.status === ExpenseStatus.REALIZED) {
+                const amount = Number(e.amount) || 0;
+
+                // Categoria
+                const cat = e.category || 'OUTROS';
+                categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
+
+                // Fornecedor
+                if (e.supplier) {
+                    const sup = e.supplier.toUpperCase().trim();
+                    supplierTotals[sup] = (supplierTotals[sup] || 0) + amount;
+                }
+            }
+        });
+
+        const categoryData = Object.entries(categoryTotals)
+            .map(([id, value]) => ({
+                name: CATEGORIES.find(c => c.id === id)?.label || id,
+                value
+            }))
+            .sort((a, b) => b.value - a.value);
+
+        const supplierData = Object.entries(supplierTotals)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 5);
+
+        return { categoryData, supplierData };
+    }, [project.expenses, globalExpenses, project.id]);
 
     // Lista de Meses Disponíveis para Filtro (Baseado na aba ativa)
     const availableMonths = useMemo(() => {
@@ -742,7 +790,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                             <th className="w-8"></th>
                                             <th className="text-left py-2 px-1 text-[8px] font-black uppercase text-stone-400 tracking-wider">Etapa</th>
                                             <th className="text-center py-2 px-1 text-[8px] font-black uppercase text-stone-400 tracking-wider w-14">Peso (%)</th>
-                                            <th className="text-right py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Custo Esp.</th>
+                                            <th className="text-right py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-24">Custo Previsto</th>
                                             <th className="text-right py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Custo Real</th>
                                             <th className="text-center py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-20">Saldo</th>
                                             <th className="text-center py-2 px-2 text-[8px] font-black uppercase text-stone-400 tracking-wider w-28">Av. Finan</th>
@@ -785,17 +833,9 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                             )}
                                                         </td>
                                                         <td className="py-2 px-3 text-right">
-                                                            {isAdmin ? (
-                                                                <input
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    value={stage.expectedCost}
-                                                                    onChange={(e) => handleStageExpectedCostChange(idx, e.target.value)}
-                                                                    className="w-20 text-right bg-white border border-stone-200 rounded px-1 py-1 text-[9px] font-black text-stone-700 focus:border-emerald-500 outline-none"
-                                                                />
-                                                            ) : (
-                                                                <span className="text-[9px] font-black text-stone-600 font-mono">{formatBRL(stage.expectedCost)}</span>
-                                                            )}
+                                                            <span className="text-[9px] font-black text-stone-600 font-mono">
+                                                                {formatBRL((Number(project.budget) || 0) * (stage.weight / 100))}
+                                                            </span>
                                                         </td>
                                                         <td className="py-2 px-3 text-right">
                                                             <span className={`text-[9px] font-black font-mono ${isOverBudget ? 'text-red-600' : 'text-emerald-700'}`}>
@@ -823,10 +863,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                         <td className="py-2 px-2">
                                                             {/* Barra Física (Manual) - VERDE */}
                                                             <div className="flex flex-col gap-0.5 w-full">
-                                                                <div className="flex justify-between items-center text-[7px] font-black uppercase text-stone-400">
-                                                                    <span>Fis.</span>
-                                                                    <span className="text-emerald-700">{stage.progress.toFixed(2)}%</span>
-                                                                </div>
                                                                 <div className="h-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
                                                                     <div className="h-full bg-emerald-600 rounded-full transition-all duration-500" style={{ width: `${Math.min(stage.progress, 100)}%` }}></div>
                                                                 </div>
@@ -1064,6 +1100,69 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                     </div>
                                 </div>
 
+                            </div>
+                        </div>
+
+                        {/* 3. GRÁFICOS ANALÍTICOS DO PROJETO */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-8">
+                            {/* Custo por Categoria */}
+                            <div className="bg-white p-6 rounded-[2rem] border border-stone-200 shadow-sm overflow-hidden min-h-[350px]">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-950 text-white flex items-center justify-center shadow-md">
+                                        <i className="fa-solid fa-chart-pie"></i>
+                                    </div>
+                                    <h3 className="text-[10px] font-black text-stone-700 uppercase tracking-widest italic">Custo por Categoria</h3>
+                                </div>
+                                <div className="h-[250px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={projectChartStats.categoryData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={50}
+                                                outerRadius={80}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                            >
+                                                {projectChartStats.categoryData.map((_entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="rgba(255,255,255,0.2)" />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip
+                                                formatter={(value?: any) => formatBRL(Number(value) || 0)}
+                                                contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold', fontSize: '10px' }}
+                                            />
+                                            <Legend iconType="circle" wrapperStyle={{ fontSize: '8px', fontWeight: 'bold', textTransform: 'uppercase', paddingTop: '10px' }} />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            {/* Top Fornecedores */}
+                            <div className="bg-white p-6 rounded-[2rem] border border-stone-200 shadow-sm overflow-hidden min-h-[350px]">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-950 text-white flex items-center justify-center shadow-md">
+                                        <i className="fa-solid fa-truck-field"></i>
+                                    </div>
+                                    <h3 className="text-[10px] font-black text-stone-700 uppercase tracking-widest italic">Maiores Fornecedores</h3>
+                                </div>
+                                <div className="h-[250px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={projectChartStats.supplierData} layout="vertical" margin={{ left: 5, right: 50, top: 10, bottom: 10 }}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+                                            <XAxis type="number" hide />
+                                            <YAxis dataKey="name" type="category" width={90} tick={{ fontSize: 8, fontWeight: 'bold', fill: '#1c1917' }} />
+                                            <Tooltip
+                                                formatter={(value?: any) => formatBRL(Number(value) || 0)}
+                                                cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                                                contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold', fontSize: '10px' }}
+                                            />
+                                            <Bar dataKey="value" fill="#064e3b" radius={[0, 8, 8, 0]} label={{ position: 'right', formatter: (val: any) => formatCompact(Number(val) || 0), fontSize: 8, fontWeight: 'bold', fill: '#064e3b' }} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
                         </div>
                     </div>
