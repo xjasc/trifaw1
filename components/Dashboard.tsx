@@ -43,18 +43,16 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
     const supplierTotals: Record<string, number> = {};
 
     const processExpense = (e: any) => {
-      if (e.status === ExpenseStatus.REALIZED) {
-        const amount = Number(e.amount) || 0;
+      const amount = Number(e.amount) || 0;
 
-        // Categoria
-        const cat = e.category || 'others';
-        categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
+      // Categoria
+      const cat = e.category || 'others';
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
 
-        // Fornecedor
-        if (e.supplier) {
-          const sup = e.supplier.toUpperCase().trim();
-          supplierTotals[sup] = (supplierTotals[sup] || 0) + amount;
-        }
+      // Fornecedor
+      if (e.supplier) {
+        const sup = e.supplier.toUpperCase().trim();
+        supplierTotals[sup] = (supplierTotals[sup] || 0) + amount;
       }
     };
 
@@ -115,7 +113,7 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
     const supplierData = Object.entries(supplierTotals)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 5); // Top 5 fornecedores
+      .slice(0, 10); // Top 5 fornecedores
 
     // Ordenar projetos por Budget (do maior para o menor) para a tabela
     detailedProjects.sort((a, b) => b.stats.budget - a.stats.budget);
@@ -258,8 +256,8 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
                   outerRadius={100}
                   paddingAngle={5}
                   dataKey="value"
-                  labelLine={true}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                  labelLine={false}
+                  label={({ percent }) => `${(percent * 100).toFixed(1)}%`}
                 >
                   {stats.categoryData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="rgba(255,255,255,0.1)" />
@@ -281,7 +279,7 @@ const Dashboard: React.FC<DashboardProps> = ({ projects = [], adminExpenses = []
             <div className="w-8 h-8 rounded-lg bg-emerald-950 text-white flex items-center justify-center shadow-md">
               <i className="fa-solid fa-truck-field"></i>
             </div>
-            <h3 className="text-xs font-black text-stone-700 uppercase tracking-widest italic">Top 5 Fornecedores</h3>
+            <h3 className="text-xs font-black text-stone-700 uppercase tracking-widest italic">Maiores Fornecedores</h3>
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">

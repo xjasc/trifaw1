@@ -95,6 +95,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
 
     // Filtro de Mês para Despesas e Medições
     const [filterMonth, setFilterMonth] = useState<string>('ALL');
+    const [selectedYear, setSelectedYear] = useState<string>('ALL');
     const [isDownloading, setIsDownloading] = useState(false);
 
     const isAdmin = currentUser?.role === UserRole.ADMIN;
@@ -229,18 +230,17 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
         const allProjectExpenses = [...(project.expenses || []), ...(globalExpenses || []).filter(e => e.projectId === project.id)];
 
         allProjectExpenses.forEach(e => {
-            if (e.status === ExpenseStatus.REALIZED) {
-                const amount = Number(e.amount) || 0;
+            // Contabilizar tanto pagas quanto futuras para ter o "Custo Total" por categoria/fornecedor
+            const amount = Number(e.amount) || 0;
 
-                // Categoria
-                const cat = e.category || 'others';
-                categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
+            // Categoria
+            const cat = e.category || 'others';
+            categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
 
-                // Fornecedor
-                if (e.supplier) {
-                    const sup = e.supplier.toUpperCase().trim();
-                    supplierTotals[sup] = (supplierTotals[sup] || 0) + amount;
-                }
+            // Fornecedor
+            if (e.supplier) {
+                const sup = e.supplier.toUpperCase().trim();
+                supplierTotals[sup] = (supplierTotals[sup] || 0) + amount;
             }
         });
 
@@ -253,29 +253,45 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
 
         const supplierData = Object.entries(supplierTotals)
             .map(([name, value]) => ({ name, value }))
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 5);
+            .sort((a, b) => b.value - a.value); // Removemos o slice(0, 5) para garantir que mais apareçam se necessário, ou mantemos para não poluir? O usuário disse que alguns não aparecem. Vamos aumentar para 10.
 
-        return { categoryData, supplierData };
+        return { categoryData, supplierData: supplierData.slice(0, 10) };
     }, [project.expenses, globalExpenses, project.id]);
 
     // Formatadores para gr\u00e1ficos (usados nos labels de Pie e Bar)
     const formatBRL = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(val || 0);
     const formatCompact = (val: number) => new Intl.NumberFormat('pt-BR', { notation: 'compact', compactDisplay: 'short', style: 'currency', currency: 'BRL' }).format(val || 0);
 
-    // Lista de Meses Disponíveis para Filtro (Baseado na aba ativa)
-    const availableMonths = useMemo(() => {
-        const months = new Set<string>();
+    // Lista de Meses Disponíveis para Filtro - Agrupado por Ano e Ordenado Crescente
+    const timelineData = useMemo(() => {
+        const groups: Record<string, string[]> = {};
         const sourceList = activeTab === 'measurements' ? sortedMeasurements : sortedExpenses;
 
         sourceList.forEach((e: Expense | Measurement) => {
             if (e.date) {
-                months.add(e.date.substring(0, 7)); // YYYY-MM
+                const y = e.date.substring(0, 4);
+                const m = e.date.substring(0, 7);
+                if (!groups[y]) groups[y] = [];
+                if (!groups[y].includes(m)) groups[y].push(m);
             }
         });
-        // Ordenar do mais recente para o mais antigo para facilitar a seleção
-        return Array.from(months).sort().reverse();
+
+        const sortedYears = Object.keys(groups).sort((a, b) => a.localeCompare(b));
+        sortedYears.forEach(y => {
+            groups[y].sort((a, b) => a.localeCompare(b));
+        });
+
+        return { years: sortedYears, groups };
     }, [sortedExpenses, sortedMeasurements, activeTab]);
+
+    // Shortcut para os meses do ano selecionado
+    const availableMonthsForBar = useMemo(() => {
+        if (selectedYear === 'ALL') {
+            // Se 'TODOS' os anos, mostramos todos os meses ordenados crescentes
+            return timelineData.years.flatMap(y => timelineData.groups[y]);
+        }
+        return timelineData.groups[selectedYear] || [];
+    }, [timelineData, selectedYear]);
 
     // Itens Filtrados pelo Mês (Despesas ou Medições)
     const filteredList = useMemo(() => {
@@ -312,13 +328,13 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
 
         const currentBalance = realizedBilling - realizedExpenses;
 
-        // Saldo Projetado = (Recebido + A Receber) - (Pago + A Pagar)
-        const projectedBalance = (realizedBilling + futureBilling) - (realizedExpenses + futureExpenses);
+        // Saldo Futuro = (Recebido + A Receber) - (Pago + A Pagar)
+        const futureBalance = (realizedBilling + futureBilling) - (realizedExpenses + futureExpenses);
 
         return {
             realizedExpenses, futureExpenses,
             realizedBilling, futureBilling,
-            currentBalance, projectedBalance,
+            currentBalance, futureBalance,
         };
     }, [sortedExpenses, measurements, project.budget]);
 
@@ -1117,11 +1133,11 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                             <div className="w-10 h-10 rounded-xl bg-white text-purple-700 flex items-center justify-center text-lg shadow-sm">
                                                 <i className="fa-solid fa-bullseye"></i>
                                             </div>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-purple-600">Saldo Final Projetado</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-purple-600">Saldo Futuro</span>
                                         </div>
                                         <div>
-                                            <h3 className="text-2xl md:text-3xl font-black italic tracking-tighter text-purple-900">{formatBRL(projectStats.projectedBalance)}</h3>
-                                            <p className="text-[9px] font-bold text-purple-400 mt-1 uppercase">Lucro Estimado ao Final</p>
+                                            <h3 className="text-2xl md:text-3xl font-black italic tracking-tighter text-purple-900">{formatBRL(projectStats.futureBalance)}</h3>
+                                            <p className="text-[9px] font-bold text-purple-400 mt-1 uppercase">Entradas - Despesas (Total)</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1150,8 +1166,8 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                 outerRadius={90}
                                                 paddingAngle={5}
                                                 dataKey="value"
-                                                labelLine={true}
-                                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                                                labelLine={false}
+                                                label={({ percent }) => `${(percent * 100).toFixed(1)}%`}
                                             >
                                                 {projectChartStats.categoryData.map((_entry, index) => (
                                                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="rgba(255,255,255,0.1)" />
@@ -1209,15 +1225,38 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                             {/* Header de Ações: Filtro Mês + Downloads + Novo */}
                             <div className="bg-[#fafaf9] p-2 rounded-2xl border border-[#e7e5e4] shadow-sm flex flex-col md:flex-row gap-2 items-center justify-between">
 
-                                {/* Scroll Horizontal de Meses */}
+                                {/* Scroll Horizontal de Anos/Meses */}
                                 <div className="flex-1 w-full overflow-x-auto no-scrollbar flex items-center gap-1.5 px-1 py-1">
                                     <button
-                                        onClick={() => setFilterMonth('ALL')}
-                                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${filterMonth === 'ALL' ? 'bg-emerald-950 text-white shadow-md' : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'}`}
+                                        onClick={() => {
+                                            setSelectedYear('ALL');
+                                            setFilterMonth('ALL');
+                                        }}
+                                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${filterMonth === 'ALL' && selectedYear === 'ALL' ? 'bg-emerald-950 text-white shadow-md' : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'}`}
                                     >
-                                        Todos
+                                        Todo o Período
                                     </button>
-                                    {availableMonths.map(month => {
+
+                                    {/* Botões de Anos (Só mostra se houver > 1 ano) */}
+                                    {timelineData.years.length > 1 && (
+                                        <div className="flex items-center gap-1 border-l border-r border-stone-200 px-2 mx-1">
+                                            {timelineData.years.map(year => (
+                                                <button
+                                                    key={year}
+                                                    onClick={() => {
+                                                        setSelectedYear(year);
+                                                        setFilterMonth('ALL'); // Reseta mês ao trocar ano
+                                                    }}
+                                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${selectedYear === year ? 'bg-amber-600 text-white shadow-sm' : 'text-stone-400 hover:bg-amber-50'}`}
+                                                >
+                                                    {year}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Botões de Meses (Filtrados pelo ano ou todos se selectedYear === 'ALL') */}
+                                    {availableMonthsForBar.map(month => {
                                         const [y, m] = month.split('-');
                                         const monthName = new Date(parseInt(y), parseInt(m) - 1).toLocaleString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
                                         return (
@@ -1226,7 +1265,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                 onClick={() => setFilterMonth(month)}
                                                 className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider whitespace-nowrap transition-all border ${filterMonth === month ? 'bg-white border-emerald-500 text-emerald-700 shadow-sm' : 'border-transparent text-stone-400 hover:bg-stone-100 hover:text-stone-600'}`}
                                             >
-                                                {monthName} {y}
+                                                {monthName} {timelineData.years.length > 1 && selectedYear === 'ALL' ? y : ''}
                                             </button>
                                         );
                                     })}
@@ -1368,12 +1407,35 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                 {/* Scroll Horizontal de Meses (Reutilizado) */}
                                 <div className="flex-1 w-full overflow-x-auto no-scrollbar flex items-center gap-1.5 px-1 py-1">
                                     <button
-                                        onClick={() => setFilterMonth('ALL')}
-                                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${filterMonth === 'ALL' ? 'bg-emerald-950 text-white shadow-md' : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'}`}
+                                        onClick={() => {
+                                            setSelectedYear('ALL');
+                                            setFilterMonth('ALL');
+                                        }}
+                                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${filterMonth === 'ALL' && selectedYear === 'ALL' ? 'bg-emerald-950 text-white shadow-md' : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'}`}
                                     >
-                                        Todos
+                                        Todo o Período
                                     </button>
-                                    {availableMonths.map(month => {
+
+                                    {/* Botões de Anos (Só mostra se houver > 1 ano) */}
+                                    {timelineData.years.length > 1 && (
+                                        <div className="flex items-center gap-1 border-l border-r border-stone-200 px-2 mx-1">
+                                            {timelineData.years.map(year => (
+                                                <button
+                                                    key={year}
+                                                    onClick={() => {
+                                                        setSelectedYear(year);
+                                                        setFilterMonth('ALL');
+                                                    }}
+                                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${selectedYear === year ? 'bg-amber-600 text-white shadow-sm' : 'text-stone-400 hover:bg-amber-50'}`}
+                                                >
+                                                    {year}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Botões de Meses */}
+                                    {availableMonthsForBar.map(month => {
                                         const [y, m] = month.split('-');
                                         const monthName = new Date(parseInt(y), parseInt(m) - 1).toLocaleString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
                                         return (
@@ -1382,7 +1444,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                 onClick={() => setFilterMonth(month)}
                                                 className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider whitespace-nowrap transition-all border ${filterMonth === month ? 'bg-white border-emerald-500 text-emerald-700 shadow-sm' : 'border-transparent text-stone-400 hover:bg-stone-100 hover:text-stone-600'}`}
                                             >
-                                                {monthName} {y}
+                                                {monthName} {timelineData.years.length > 1 && selectedYear === 'ALL' ? y : ''}
                                             </button>
                                         );
                                     })}
