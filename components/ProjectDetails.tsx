@@ -233,7 +233,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                 const amount = Number(e.amount) || 0;
 
                 // Categoria
-                const cat = e.category || 'OUTROS';
+                const cat = e.category || 'others';
                 categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
 
                 // Fornecedor
@@ -288,7 +288,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
     const photoTopics = project.photoTopics || [];
     const documents = project.documents || [];
 
-    const formatBRL = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+
 
     const estimatedEndDate = useMemo(() => {
         if (!project.startDate || !project.durationMonths) return null;
@@ -1150,8 +1150,8 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                 outerRadius={90}
                                                 paddingAngle={5}
                                                 dataKey="value"
-                                                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                                                labelLine={false}
+                                                labelLine={true}
+                                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
                                             >
                                                 {projectChartStats.categoryData.map((_entry, index) => (
                                                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="rgba(255,255,255,0.1)" />
@@ -1186,7 +1186,11 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, users = [], su
                                                 cursor={{ fill: 'rgba(0,0,0,0.02)' }}
                                                 contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold', fontSize: '10px' }}
                                             />
-                                            <Bar dataKey="value" fill="#064e3b" radius={[0, 8, 8, 0]} label={{ position: 'right', formatter: (val: any) => formatCompact(Number(val) || 0), fontSize: 9, fontWeight: 'bold', fill: '#064e3b' }} />
+                                            <Bar dataKey="value" radius={[0, 8, 8, 0]} label={{ position: 'right', formatter: (val: any) => formatCompact(Number(val) || 0), fontSize: 9, fontWeight: 'bold', fill: '#1c1917' }}>
+                                                {projectChartStats.supplierData.map((_entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                                ))}
+                                            </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
